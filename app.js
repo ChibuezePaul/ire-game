@@ -3,7 +3,7 @@ const config = require("./config.json")
 
 
 const app = express();
-const port = config.port || 3000;
+const port = process.env.PORT || config.port;
 
 app.get("/", (req, res) => res.send("Welcome to IRE Game..."))
 
