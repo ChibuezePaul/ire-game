@@ -4,7 +4,7 @@
   "description": "IRE is an indigenous quiz game",
   "main": "app.js",
   "scripts": {
-    "start": "node start",
+    "start": "nodemon",
     "heroku-postbuild": "npm run build"
   },
   "repository": {
