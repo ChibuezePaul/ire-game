@@ -9,14 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kossy-okonkwo/IRE-GAME.git"
+    "url": "https://git.heroku.com/fierce-temple-63048.git"
+    
   },
   "author": "ChibuezePaul (ISoft.Codes)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/kossy-okonkwo/IRE-GAME/issues"
   },
-  "homepage": "https://github.com/kossy-okonkwo/IRE-GAME#readme",
+  
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
