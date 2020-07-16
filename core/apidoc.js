@@ -27,22 +27,29 @@
  * @apiName GetUser
  * @apiGroup User
  *
- * @apiParam {Number} id User unique ID.
+ * @apiParam {String} id User unique ID.
  *
+ * @apiSuccess {String} _id Unique Id of the User.
  * @apiSuccess {String} username Username of the User.
- * @apiSuccess {String} password  Password of the User.
- * @apiSuccess {String} phone  Phone of the User.
+ * @apiSuccess {String} password Password of the User.
+ * @apiSuccess {String} phone Phone of the User.
  * @apiSuccess {Enum: {MALE, FEMALE}} gender  Gender of the User.
- * @apiSuccess {String} email  Email of the User.
+ * @apiSuccess {String} email Email of the User.
+ * @apiSuccess {String} location location of the User.
+ * @apiSuccess {String} avatarId AvatarId of the User.
+ * @apiSuccess {String} createdOn Date User was User.
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
+ *       "_id": "5f0e5d7d9eec3210099b9d"
  *       "username": "JohnDoe",
  *       "password": "*****",
- *       "phone": "phone",
- *       "gender": "gender",
- *       "email": "email",
+ *       "phone": 09032456789,
+ *       "gender": "MALE",
+ *       "email": "JohnDoe@gmail.com",
+ *       "location": "Lagos",
+ *       "avatarId": 8,
 *        "createdOn": "2020-07-15",
  *     }
  *
@@ -71,9 +78,12 @@
  * @apiGroup User
  *
  * @apiParam {String} username Username of the User
+ * @apiParam {String} password  Password of the User.
  * @apiParam {String} phone  Phone of the User.
  * @apiParam {String} email  Email of the User.
  * @apiParam {Enum: {MALE, FEMALE}} gender gender of the User.
+ * @apiParam {Number} avatar  Avatar Id of the User.
+ * @apiParam {String} location  location of the User.
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
@@ -100,7 +110,7 @@
  * @apiParam {String} username Username of the User
  * @apiParam {String} password  Password of the User.
  *
- * @apiSuccessExample Success-Response:
+ * @apiSuccessExample Success
  *     HTTP/1.1 200 OK
  *
  * @apiUse UserError

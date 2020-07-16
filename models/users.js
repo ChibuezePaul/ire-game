@@ -22,8 +22,8 @@ const userSchema = mongoose.Schema({
         return /\d{1,}/.test(v);
       },
       message: props => `${props.value} is not a valid phone number!`
-    },
-    required: [true, 'User phone number required']
+    }
+    // required: [true, 'User phone number required']
   },
   gender: {
     type: String,
@@ -36,6 +36,14 @@ const userSchema = mongoose.Schema({
       },
       message: props => `MALE and FEMALE are the only valid gender. ${props.value} is not a valid gender`
     },
+  },
+  location: {
+    type: String
+    // required: true
+  },
+  avatar: {
+    type: Number
+    // required: true
   },
   createdOn: {
     type: Date,

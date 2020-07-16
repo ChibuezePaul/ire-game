@@ -1,7 +1,7 @@
 {
   "name": "ire-game",
   "version": "1.0.0",
-  "description": "IRE is an indigenous quiz game",
+  "description": "ire is an indigenous quiz game",
   "main": "app.js",
   "scripts": {
     "start": "nodemon app.js",

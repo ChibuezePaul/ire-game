@@ -48,7 +48,7 @@ define({ "api": [
         "Parameter": [
           {
             "group": "Parameter",
-            "type": "Number",
+            "type": "String",
             "optional": false,
             "field": "id",
             "description": "<p>User unique ID.</p>"
@@ -59,6 +59,13 @@ define({ "api": [
     "success": {
       "fields": {
         "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "_id",
+            "description": "<p>Unique Id of the User.</p>"
+          },
           {
             "group": "Success 200",
             "type": "String",
@@ -94,13 +101,34 @@ define({ "api": [
             "optional": false,
             "field": "email",
             "description": "<p>Email of the User.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "location",
+            "description": "<p>location of the User.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "avatarId",
+            "description": "<p>AvatarId of the User.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "createdOn",
+            "description": "<p>Date User was User.</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"username\": \"JohnDoe\",\n  \"password\": \"*****\",\n  \"phone\": \"phone\",\n  \"gender\": \"gender\",\n  \"email\": \"email\",\n   \"createdOn\": \"2020-07-15\",\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"_id\": \"5f0e5d7d9eec3210099b9d\"\n  \"username\": \"JohnDoe\",\n  \"password\": \"*****\",\n  \"phone\": 09032456789,\n  \"gender\": \"MALE\",\n  \"email\": \"JohnDoe@gmail.com\",\n  \"location\": \"Lagos\",\n  \"avatarId\": 8,\n   \"createdOn\": \"2020-07-15\",\n}",
           "type": "json"
         }
       ]
@@ -157,7 +185,7 @@ define({ "api": [
     "success": {
       "examples": [
         {
-          "title": "Success-Response:",
+          "title": "Success",
           "content": "HTTP/1.1 200 OK",
           "type": "json"
         }
@@ -206,6 +234,13 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
+            "field": "password",
+            "description": "<p>Password of the User.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
             "field": "phone",
             "description": "<p>Phone of the User.</p>"
           },
@@ -223,6 +258,20 @@ define({ "api": [
             "optional": false,
             "field": "gender",
             "description": "<p>gender of the User.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "avatar",
+            "description": "<p>Avatar Id of the User.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "location",
+            "description": "<p>location of the User.</p>"
           }
         ]
       }

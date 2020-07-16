@@ -54,10 +54,10 @@ app.get(BASE_URL+":id", (req, res) => {
   User.findById({ "_id":id }, (error, user) => {
     if (error) {
       console.log(`Error occured fetching user with id ${id}: ${error}`);
-      res.status(404).json(sendError(`User not found with id: ${id}`));
+      res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
     }
     else {
-      res.status(200).json(user);
+      res.status(200).json(sendSuccessMessage(user));
     }
   })
 })
@@ -84,10 +84,10 @@ app.put(BASE_URL+":id", (req, res) => {
     (error, user) => {
       if (error) {
         console.log(`Error occured updating user with id ${id}: ${error}`);
-        res.status(404).json(sendError(`User not found with id: ${id}`));
+        res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
       else {
-        res.status(200).json(user);
+        res.status(200).json(sendSuccessMessage(user));
       }
     }
   )
@@ -97,41 +97,43 @@ app.get(BASE_URL, (req, res) => {
   User.find({}, (error, users) => {
     if (error) {
       console.log(`Error occured fetching users: ${error}`);
-      res.status(400).json(sendError(`No user found in database: ${error}`));
+      res.status(404).json(sendErrorMessage(`No user found in database: ${error}`, 404));
     }
     else {
-      res.status(200).json(users);
+      res.status(200).json(sendSuccessMessage(users));
     }
   })
 })
 
 app.post(BASE_URL, (req, res) => {
   if (!req.body) {
-    res.status(400).json(sendError("Missing User Details"));
+    res.status(400).json(sendErrorMessage("Missing User Details"));
     return;
   }
-  let { username, password, email, phone, gender } = req.body;
+  let { username, password, email, phone, gender, location, avatar } = req.body;
 
   const newUser = new User({
     username: username,
     password: password,
     email: email,
     phone: phone,
-    gender: gender
+    gender: gender,
+    location: location,
+    avatar: avatar
   });
 
   const error = newUser.validateSync();
 
   if (error) {
     console.log(`Bad Detais sent for user with email: ${email}`);
-    return res.status(400).json(sendError(error.message.replace("User validation failed:", "").split(",")));
+    return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").split(",")));
   }
   else {
     bcrypt.genSalt(10, (error, salt) => {
       bcrypt.hash(password, salt, (error, hash) => {
         if (error) {
           console.log(`Error occured hashing password for new user with email: ${email}`);
-          res.status(400).json(sendError(error));
+          res.status(400).json(sendErrorMessage(error));
           return;
         }
         else {
@@ -139,11 +141,11 @@ app.post(BASE_URL, (req, res) => {
           newUser.save(error => {
             if (error) {
               console.log(`Error occured saving new user with email ${email}: ${error}`);
-              res.status(400).json(sendError(error));
+              res.status(400).json(sendErrorMessage(error));
               return;
             }
             else {
-              res.status(200).json(newUser);
+              res.status(200).json(sendSuccessMessage(newUser));
             }
           })
         }
@@ -159,27 +161,27 @@ app.post(BASE_URL, (req, res) => {
 app.post(BASE_URL+"login", (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  if (!username) {
-    return res.status(400).json(sendError());
+  if (!username || !password) {
+    return res.status(400).json(sendErrorMessage());
   }
 
   User.findOne({ username: username }, function (error, user) {
-    if (error) { return res.status(400).json(sendError(error)); }
+    if (error) { return res.status(400).json(sendErrorMessage(error, 400)); }
     if (!user) {
-      return res.status(404).json(sendError(`User not found with username: ${username}`));
+      return res.status(404).json(sendErrorMessage(`User not found with username: ${username}`, 404));
     }
     bcrypt.compare(password, user.password, (error, isMatch) => {
       if (error) {
         throw error;
       }
       if (isMatch) {
-        return res.sendStatus(200);
+        return res.status(200).json(sendSuccessMessage("Success"));
         // jwt.sign({ user }, config.secretKey, (error, token) => {
         //   return res.status(200).json("Login Successful");
         // })
       }
       else {
-        return res.status(400).json(sendError('Incorrect password'));
+        return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
     });
   });
@@ -195,9 +197,16 @@ app.post(BASE_URL+"login", (req, res, next) => {
 //   return next();
 // }
 
-function sendError(message) {
-  return {"Error Occured": `${message || 'Bad Request'}`}
+function sendErrorMessage(message, code = 400) {
+  return {
+    code, message: `${message || 'Bad Request'}`
+  }
 }
 
+function sendSuccessMessage(message, code = 200) {
+  return {
+    code: `${code}`, message
+  }
+}
 //Server Startup
 app.listen(port, console.log(`IRE Game Server Started On Port ${port}...`))
