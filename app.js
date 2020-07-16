@@ -156,7 +156,7 @@ app.post(BASE_URL, (req, res) => {
   
 // })
 
-app.post(BASE_URL+"/login", (req, res, next) => {
+app.post(BASE_URL+"login", (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
   if (!username) {
