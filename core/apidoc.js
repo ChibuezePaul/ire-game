@@ -23,11 +23,11 @@
  */
 
 /**
- * @api {get} /users/:id Request User information
+ * @api {get} /api/user/:id Request User information
  * @apiName GetUser
  * @apiGroup User
  *
- * @apiParam {Number} id Users unique ID.
+ * @apiParam {Number} id User unique ID.
  *
  * @apiSuccess {String} username Username of the User.
  * @apiSuccess {String} password  Password of the User.
@@ -50,14 +50,14 @@
  */
 
 /**
- * @api {put} /users/:id Modify User information
+ * @api {put} /api/user/:id Modify User information
  * @apiName PutUser
  * @apiGroup User
  *
- * @apiParam {Number} id Users unique ID.
- * @apiParam {String} username Username of the User
- * @apiParam {String} phone  Phone of the User.
- * @apiParam {String} email  Email of the User.
+ * @apiParam {Number} id Users unique ID (Passed as url param).
+ * @apiParam {String} username New Username of the User
+ * @apiParam {String} phone  New Phone of the User.
+ * @apiParam {String} email  New Email of the User.
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
@@ -66,7 +66,7 @@
  */
 
 /**
- * @api {post} /users/ Create New User
+ * @api {post} /api/user Create New User
  * @apiName PostUser
  * @apiGroup User
  *
@@ -82,9 +82,23 @@
  */
 
 /**
- * @api {get} /users/ Request All Users information
+ * @api {get} /api/user Request All Users information
  * @apiName GetAllUser
  * @apiGroup User
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *
+ * @apiUse UserError
+ */
+
+ /**
+ * @api {post} /api/user/login User Login
+ * @apiName LoginUser
+ * @apiGroup User
+ *
+ * @apiParam {String} username Username of the User
+ * @apiParam {String} password  Password of the User.
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK

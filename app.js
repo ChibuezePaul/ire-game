@@ -31,6 +31,8 @@ app.use(express.static(path.join(__dirname, 'public/doc')));
 // require("./core/passport")(passport);
 // app.use(passport.initialize());
 
+const BASE_URL = "/api/user/"
+
 
 //App Resources
 app.get("/", (req, res) => res.render("index"))
@@ -39,7 +41,7 @@ app.get("/", (req, res) => res.render("index"))
 //   res.status(400).json(sendError());
 // })
 
-app.get("/users/:id", (req, res) => {
+app.get(BASE_URL+":id", (req, res) => {
   let id = req.params.id;
 
   User.findById({ "_id":id }, (error, user) => {
@@ -53,13 +55,13 @@ app.get("/users/:id", (req, res) => {
   })
 })
 
-app.put("/users/:id", (req, res) => {
+app.put(BASE_URL+":id", (req, res) => {
 
   const { username, email, phone } = req.body;
-  const identifiers = [];
-  if (username) identifiers.push(username);
-  if (email) identifiers.push(email);
-  if (phone) identifiers.push(phone);
+  // const identifiers = [];
+  // if (username) identifiers.push(username);
+  // if (email) identifiers.push(email);
+  // if (phone) identifiers.push(phone);
 
   const id = req.params.id;
   User.findOneAndUpdate(
@@ -84,7 +86,7 @@ app.put("/users/:id", (req, res) => {
   )
 })
 
-app.get("/users", (req, res) => {
+app.get(BASE_URL, (req, res) => {
   User.find({}, (error, users) => {
     if (error) {
       console.log(`Error occured fetching users: ${error}`);
@@ -96,7 +98,7 @@ app.get("/users", (req, res) => {
   })
 })
 
-app.post("/users", (req, res) => {
+app.post(BASE_URL, (req, res) => {
   if (!req.body) {
     res.status(400).json(sendError("Missing User Details"));
     return;
@@ -143,11 +145,11 @@ app.post("/users", (req, res) => {
   }
 })
 
-app.post("/users/login", verifyToken, (req, res, next) => {
+// app.post("/users/login", verifyToken, (req, res, next) => {
   
-})
+// })
 
-app.post("/api/auth", (req, res, next) => {
+app.post(BASE_URL+"/login", (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
   if (!username) {
@@ -164,9 +166,10 @@ app.post("/api/auth", (req, res, next) => {
         throw error;
       }
       if (isMatch) {
-        jwt.sign({ user }, config.secretKey, (error, token) => {
-          return res.status(200).json({token});
-        })
+        return res.sendStatus(200);
+        // jwt.sign({ user }, config.secretKey, (error, token) => {
+        //   return res.status(200).json("Login Successful");
+        // })
       }
       else {
         return res.status(400).json(sendError('Incorrect password'));
@@ -175,15 +178,15 @@ app.post("/api/auth", (req, res, next) => {
   });
 })
 
-function verifyToken(req, res, next) {
-  const bearerHeader = req.headers["authorization"];
-  if (!bearerHeader) {
-    return res.status(403).json(sendError('Missing Bearer token'));
-  }
-  const token = bearerHeader.split(" ")[1];
-  req.token = token;
-  return next();
-}
+// function verifyToken(req, res, next) {
+//   const bearerHeader = req.headers["authorization"];
+//   if (!bearerHeader) {
+//     return res.status(403).json(sendError('Missing Bearer token'));
+//   }
+//   const token = bearerHeader.split(" ")[1];
+//   req.token = token;
+//   return next();
+// }
 
 function sendError(message) {
   return {"Error Occured": `${message || 'Bad Request'}`}

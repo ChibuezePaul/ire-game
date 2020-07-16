@@ -1,7 +1,7 @@
 define({ "api": [
   {
     "type": "get",
-    "url": "/users/",
+    "url": "/api/user",
     "title": "Request All Users information",
     "name": "GetAllUser",
     "group": "User",
@@ -39,7 +39,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/users/:id",
+    "url": "/api/user/:id",
     "title": "Request User information",
     "name": "GetUser",
     "group": "User",
@@ -51,7 +51,7 @@ define({ "api": [
             "type": "Number",
             "optional": false,
             "field": "id",
-            "description": "<p>Users unique ID.</p>"
+            "description": "<p>User unique ID.</p>"
           }
         ]
       }
@@ -122,7 +122,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Error-Response:",
-          "content": "HTTP/1.1 404 Not Found\n{\n  \"error\": \"UserNotFound\"\n}",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"error\": \"User Not Found with {id}\"\n}",
           "type": "json"
         }
       ]
@@ -130,7 +130,65 @@ define({ "api": [
   },
   {
     "type": "post",
-    "url": "/users/",
+    "url": "/api/user/login",
+    "title": "User Login",
+    "name": "LoginUser",
+    "group": "User",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>Username of the User</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "password",
+            "description": "<p>Password of the User.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "core/apidoc.js",
+    "groupTitle": "User",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "UserError",
+            "description": "<p>Bad User Request.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"error\": \"Error Occured: {Error}\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "post",
+    "url": "/api/user",
     "title": "Create New User",
     "name": "PostUser",
     "group": "User",
@@ -203,7 +261,7 @@ define({ "api": [
   },
   {
     "type": "put",
-    "url": "/users/",
+    "url": "/api/user/:id",
     "title": "Modify User information",
     "name": "PutUser",
     "group": "User",
@@ -215,28 +273,28 @@ define({ "api": [
             "type": "Number",
             "optional": false,
             "field": "id",
-            "description": "<p>Users unique ID.</p>"
+            "description": "<p>Users unique ID (Passed as url param).</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "username",
-            "description": "<p>Username of the User</p>"
+            "description": "<p>New Username of the User</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "phone",
-            "description": "<p>Phone of the User.</p>"
+            "description": "<p>New Phone of the User.</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "email",
-            "description": "<p>Email of the User.</p>"
+            "description": "<p>New Email of the User.</p>"
           }
         ]
       }
@@ -267,7 +325,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Error-Response:",
-          "content": "HTTP/1.1 404 Not Found\n{\n  \"error\": \"UserNotFound\"\n}",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"error\": \"User Not Found with {id}\"\n}",
           "type": "json"
         }
       ]
