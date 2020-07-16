@@ -16,12 +16,18 @@
   "bugs": {
     "url": "https://github.com/kossy-okonkwo/IRE-GAME/issues"
   },
-  
   "dependencies": {
+    "apidoc": "^0.23.0",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.24",
     "nodemon": "^2.0.4",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0"
+  },
+  "apidoc": {
+    "title": "IRE Game Backend API Browser",
+    "url": "http://ire-game.herokuapp.com"
   }
 }
