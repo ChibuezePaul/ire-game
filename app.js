@@ -23,14 +23,14 @@ db.once('open', function () {
 app.use(express.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  next();
+  return next();
 });
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(function (req, res, next) {
   if (req.headers['x-forwarded-proto'] === 'https') {
-    res.redirect('http://' + req.hostname + req.url);
+    return res.redirect('http://' + req.hostname + req.url);
   } else {
-    next();
+    return next();
   }
 });
 
@@ -43,8 +43,7 @@ app.get("/", (req, res) => res.render("index"))
 
 app.post(BASE_URL, (req, res) => {
   if (!req.body) {
-    res.status(400).json(sendErrorMessage("Missing User Details"));
-    return;
+    return res.status(400).json(sendErrorMessage("Missing User Details"));
   }
   const { username, password, email, phone, gender, location, avatarId } = req.body;
 
@@ -69,19 +68,17 @@ app.post(BASE_URL, (req, res) => {
       bcrypt.hash(password, salt, (error, hash) => {
         if (error) {
           console.log(`Error occured hashing password for new user with email: ${email}`);
-          res.status(400).json(sendErrorMessage(error));
-          return;
+          return res.status(400).json(sendErrorMessage(error));
         }
         else {
           newUser.password = hash;
           newUser.save(error => {
             if (error) {
               console.log(`Error occured saving new user with email ${email}: ${error}`);
-              res.status(400).json(sendErrorMessage(error));
-              return;
+              return res.status(400).json(sendErrorMessage(error));
             }
             else {
-              res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
+              return res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
             }
           })
         }
@@ -124,13 +121,13 @@ app.get(BASE_URL + ":id", verifyToken, (req, res) => {
   UserQuery.findOne({ _id: id }, (error, user) => {
     if (error) {
       console.log(`Error occured fetching user with id ${id}: ${error}`);
-      res.status(400).json(sendErrorMessage(error, 400));
+      return res.status(400).json(sendErrorMessage(error, 400));
     }
     if (!user) {
-      res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+      return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
     }
     else {
-      res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
     }
   });
 })
@@ -153,13 +150,13 @@ app.put(BASE_URL + ":id", verifyToken, (req, res) => {
     (error, user) => {
       if (error) {
         console.log(`Error occured fetching user with id ${id}: ${error}`);
-        res.status(400).json(sendErrorMessage(error, 400));
+        return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
-        res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
       else {
-        res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
       }
     }
   )
@@ -182,13 +179,13 @@ app.delete(BASE_URL + ":id", verifyToken, (req, res) => {
     (error, user) => {
       if (error) {
         console.log(`Error occured fetching user with id ${id}: ${error}`);
-        res.status(400).json(sendErrorMessage(error, 400));
+        return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
-        res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
       else {
-        res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
       }
     }
   )
@@ -199,25 +196,27 @@ app.get(BASE_URL, verifyToken, (req, res) => {
   UserQuery.find({}, (error, users) => {
     if (error) {
       console.log(`Error occured fetching users: ${error}`);
-      res.status(400).json(sendErrorMessage(error, 400));
+      return res.status(400).json(sendErrorMessage(error, 400));
     }
     if (users.length == 0) {
-      res.status(404).json(sendErrorMessage("No user found in database", 404));
+      return res.status(404).json(sendErrorMessage("No user found in database", 404));
     }
     else {
-      res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
+      return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
     }
   })
 })
 
 function verifyToken(req, res, next) {
-  const bearerHeader = req.headers["authorization"];
-  if (!bearerHeader) {
-    return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
+  if ((!req.url == BASE_URL || !req.url == BASE_URL + "login") && + req.method == "POST") {
+    const bearerHeader = req.headers["authorization"];
+    if (!bearerHeader) {
+      return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
+    }
+    const token = bearerHeader.split(" ")[1];
+    req.token = token;
+    return next();
   }
-  const token = bearerHeader.split(" ")[1];
-  req.token = token;
-  return next();
 }
 
 function jwtVerify(req, res) {
