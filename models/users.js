@@ -41,14 +41,20 @@ const userSchema = mongoose.Schema({
     type: String
     // required: true
   },
-  avatar: {
+  avatarId: {
     type: Number
     // required: true
   },
   createdOn: {
     type: Date,
-    default: Date.now 
+    default: Date.now
+  },
+  delFlag: {
+    type: String,
+    default: "N"
   }
-})
-
+},
+{
+  strictQuery: 'throw'
+});
 const User = module.exports = mongoose.model("User", userSchema);
