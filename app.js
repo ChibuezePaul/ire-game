@@ -41,9 +41,82 @@ const UserQuery = User.find({ delFlag: "N" });
 //App Resources
 app.get("/", (req, res) => res.render("index"))
 
-// app.all("*", (req, res, next) => {
-//   res.status(400).json(sendError());
-// })
+app.post(BASE_URL, (req, res) => {
+  if (!req.body) {
+    res.status(400).json(sendErrorMessage("Missing User Details"));
+    return;
+  }
+  const { username, password, email, phone, gender, location, avatarId } = req.body;
+
+  const newUser = new User({
+    username: username,
+    password: password,
+    email: email,
+    phone: phone,
+    gender: gender,
+    location: location,
+    avatarId: avatarId
+  });
+
+  const error = newUser.validateSync();
+
+  if (error) {
+    console.log(`Bad Detais sent for user with email: ${email}`);
+    return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").split(",")));
+  }
+  else {
+    bcrypt.genSalt(10, (error, salt) => {
+      bcrypt.hash(password, salt, (error, hash) => {
+        if (error) {
+          console.log(`Error occured hashing password for new user with email: ${email}`);
+          res.status(400).json(sendErrorMessage(error));
+          return;
+        }
+        else {
+          newUser.password = hash;
+          newUser.save(error => {
+            if (error) {
+              console.log(`Error occured saving new user with email ${email}: ${error}`);
+              res.status(400).json(sendErrorMessage(error));
+              return;
+            }
+            else {
+              res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
+            }
+          })
+        }
+      })
+    })
+  }
+})
+
+app.post(BASE_URL + "login", (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  if (!username || !password) {
+    return res.status(400).json(sendErrorMessage());
+  }
+
+  UserQuery.findOne({ username: username }, function (error, user) {
+    if (error) { return res.status(400).json(sendErrorMessage(error, 400)); }
+    if (!user) {
+      return res.status(404).json(sendErrorMessage(`User not found with username: ${username}`, 404));
+    }
+    bcrypt.compare(password, user.password, (error, isMatch) => {
+      if (error) {
+        throw error;
+      }
+      if (isMatch) {
+        jwt.sign({ user }, config.secretKey, (error, token) => {
+          return res.status(200).json(sendSuccessMessage("Bearer " + token));
+        })
+      }
+      else {
+        return res.status(400).json(sendErrorMessage('Incorrect password'));
+      }
+    });
+  });
+})
 
 app.get(BASE_URL + ":id", verifyToken, (req, res) => {
   jwtVerify(req, res);
@@ -137,87 +210,10 @@ app.get(BASE_URL, verifyToken, (req, res) => {
   })
 })
 
-app.post(BASE_URL, (req, res) => {
-  if (!req.body) {
-    res.status(400).json(sendErrorMessage("Missing User Details"));
-    return;
-  }
-  const { username, password, email, phone, gender, location, avatarId } = req.body;
-
-  const newUser = new User({
-    username: username,
-    password: password,
-    email: email,
-    phone: phone,
-    gender: gender,
-    location: location,
-    avatarId: avatarId
-  });
-
-  const error = newUser.validateSync();
-
-  if (error) {
-    console.log(`Bad Detais sent for user with email: ${email}`);
-    return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").split(",")));
-  }
-  else {
-    bcrypt.genSalt(10, (error, salt) => {
-      bcrypt.hash(password, salt, (error, hash) => {
-        if (error) {
-          console.log(`Error occured hashing password for new user with email: ${email}`);
-          res.status(400).json(sendErrorMessage(error));
-          return;
-        }
-        else {
-          newUser.password = hash;
-          newUser.save(error => {
-            if (error) {
-              console.log(`Error occured saving new user with email ${email}: ${error}`);
-              res.status(400).json(sendErrorMessage(error));
-              return;
-            }
-            else {
-              res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
-            }
-          })
-        }
-      })
-    })
-  }
-})
-
-app.post(BASE_URL+"login", (req, res, next) => {
-  const username = req.body.username;
-  const password = req.body.password;
-  if (!username || !password) {
-    return res.status(400).json(sendErrorMessage());
-  }
-
-  UserQuery.findOne({ username: username}, function (error, user) {
-    if (error) { return res.status(400).json(sendErrorMessage(error, 400)); }
-    if (!user) {
-      return res.status(404).json(sendErrorMessage(`User not found with username: ${username}`, 404));
-    }
-    bcrypt.compare(password, user.password, (error, isMatch) => {
-      if (error) {
-        throw error;
-      }
-      if (isMatch) {
-        jwt.sign({ user }, config.secretKey, (error, token) => {
-          return res.status(200).json(sendSuccessMessage("Bearer "+token));
-        })
-      }
-      else {
-        return res.status(400).json(sendErrorMessage('Incorrect password'));
-      }
-    });
-  });
-})
-
 function verifyToken(req, res, next) {
   const bearerHeader = req.headers["authorization"];
   if (!bearerHeader) {
-    return res.status(403).json(sendErrorMessage('Missing Header Token'));
+    return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
   }
   const token = bearerHeader.split(" ")[1];
   req.token = token;
