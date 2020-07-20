@@ -217,6 +217,7 @@ function verifyToken(req, res, next) {
     req.token = token;
     return next();
   }
+  return next();
 }
 
 function jwtVerify(req, res) {
