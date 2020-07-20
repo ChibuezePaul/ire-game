@@ -115,8 +115,8 @@ app.post(BASE_URL + "login", (req, res) => {
   });
 })
 
-app.get(BASE_URL + ":id", verifyToken, (req, res) => {
-  jwtVerify(req, res);
+app.get(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
+  // jwtVerify(req, res);
   const id = req.params.id;
   UserQuery.findOne({ _id: id }, (error, user) => {
     if (error) {
@@ -132,8 +132,8 @@ app.get(BASE_URL + ":id", verifyToken, (req, res) => {
   });
 })
 
-app.put(BASE_URL + ":id", verifyToken, (req, res) => {
-  jwtVerify(req, res);
+app.put(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
+  // jwtVerify(req, res);
   const { username, email, phone, location, avatarId } = req.body;
   const id = req.params.id;
   UserQuery.findOneAndUpdate(
@@ -162,8 +162,8 @@ app.put(BASE_URL + ":id", verifyToken, (req, res) => {
   )
 })
 
-app.delete(BASE_URL + ":id", verifyToken, (req, res) => {
-  jwtVerify(req, res);
+app.delete(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
+  // jwtVerify(req, res);
   const id = req.params.id;
   UserQuery.findOneAndUpdate(
     { _id: id },
@@ -191,8 +191,8 @@ app.delete(BASE_URL + ":id", verifyToken, (req, res) => {
   )
 })
 
-app.get(BASE_URL, verifyToken, (req, res) => {
-  jwtVerify(req, res);
+app.get(BASE_URL, /*verifyToken,*/ (req, res) => {
+  // jwtVerify(req, res);
   UserQuery.find({}, (error, users) => {
     if (error) {
       console.log(`Error occured fetching users: ${error}`);
@@ -207,26 +207,23 @@ app.get(BASE_URL, verifyToken, (req, res) => {
   })
 })
 
-function verifyToken(req, res, next) {
-  if ((!req.url == BASE_URL || !req.url == BASE_URL + "login") && + req.method == "POST") {
-    const bearerHeader = req.headers["authorization"];
-    if (!bearerHeader) {
-      return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
-    }
-    const token = bearerHeader.split(" ")[1];
-    req.token = token;
-    return next();
-  }
-  return next();
-}
+// function verifyToken(req, res, next) {
+//   const bearerHeader = req.headers["authorization"];
+//   if (!bearerHeader) {
+//     return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
+//   }
+//   const token = bearerHeader.split(" ")[1];
+//   req.token = token;
+//   return next();
+// }
 
-function jwtVerify(req, res) {
-  jwt.verify(req.token, config.secretKey, (error, authData) => {
-    if (error) {
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403))
-    }
-  })
-}
+// function jwtVerify(req, res) {
+//   jwt.verify(req.token, config.secretKey, (error, authData) => {
+//     if (error) {
+//       return res.status(403).json(sendErrorMessage("Unauthorized Request", 403))
+//     }
+//   })
+// }
 
 function sendErrorMessage(message, code = 400) {
   return {
