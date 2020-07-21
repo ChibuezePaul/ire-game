@@ -28,9 +28,9 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(function (req, res, next) {
   if (req.headers['x-forwarded-proto'] === 'https') {
-    return res.redirect('http://' + req.hostname + req.url);
+    res.redirect('http://' + req.hostname + req.url);
   } else {
-    return next();
+    next();
   }
 });
 
@@ -93,125 +93,134 @@ app.post(BASE_URL + "login", (req, res) => {
       if (error) {
         throw error;
       }
-      if (isMatch) {
-        jwt.sign({ user }, secretKey, (error, token) => {
-          return res.status(200).json(sendSuccessMessage("Bearer " + token));
-        })
+      if (!isMatch) {
+        return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
-      return res.status(400).json(sendErrorMessage('Incorrect password'));
+      jwt.sign({ user }, secretKey, (error, token) => {
+        return res.status(200).json(sendSuccessMessage("Bearer " + token));
+      })
     });
   });
 });
 
 app.get(BASE_URL + ":id", verifyToken, (req, res, next) => {
-  jwtVerify(req, res, next);
-  const id = req.params.id;
-  User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
+  jwt.verify(req.token, secretKey, (error, authData) => {
     if (error) {
-      console.log(`Error occured fetching user with id ${id}: ${error}`);
-      return res.status(400).json(sendErrorMessage(error, 400));
+      console.log(`token verification error: ${error}`);
+      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
-    if (!user) {
-      return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
-    }
-    return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
-  });
+    const id = req.params.id;
+    User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
+      if (error) {
+        console.log(`Error occured fetching user with id ${id}: ${error}`);
+        return res.status(400).json(sendErrorMessage(error, 400));
+      }
+      if (!user) {
+        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+      }
+      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+    });
+  })
 });
 
 app.put(BASE_URL + ":id", verifyToken, (req, res, next) => {
-  jwtVerify(req, res);
-  const { username, email, phone, location, avatarId } = req.body;
-  const id = req.params.id;
-  User.findOneAndUpdate(
-    { _id: id, delFlag: "N" },
-    {
-      $set: {
-        username, email, phone, location, avatarId
-      }
-    },
-    {
-      new: true,
-      useFindAndModify: false
-    },
-    (error, user) => {
-      if (error) {
-        console.log(`Error occured fetching user with id ${id}: ${error}`);
-        return res.status(400).json(sendErrorMessage(error, 400));
-      }
-      if (!user) {
-        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
-      }
-      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+  jwt.verify(req.token, secretKey, (error, authData) => {
+    if (error) {
+      console.log(`token verification error: ${error}`);
+      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
-  );
+    const { username, email, phone, location, avatarId } = req.body;
+    const id = req.params.id;
+    User.findOneAndUpdate(
+      { _id: id, delFlag: "N" },
+      {
+        $set: {
+          username, email, phone, location, avatarId
+        }
+      },
+      {
+        new: true,
+        useFindAndModify: false
+      },
+      (error, user) => {
+        if (error) {
+          console.log(`Error occured fetching user with id ${id}: ${error}`);
+          return res.status(400).json(sendErrorMessage(error, 400));
+        }
+        if (!user) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      }
+    );
+  })  
 });
 
 app.delete(BASE_URL + ":id", verifyToken, (req, res, next) => {
-  jwtVerify(req, res, next);
-  const id = req.params.id;
-  User.findOneAndUpdate(
-    { _id: id, delFlag: "N" },
-    {
-      $set: {
-        delFlag: "Y"
-      }
-    },
-    {
-      new: true,
-      useFindAndModify: false
-    },
-    (error, user) => {
-      if (error) {
-        console.log(`Error occured fetching user with id ${id}: ${error}`);
-        return res.status(400).json(sendErrorMessage(error, 400));
-      }
-      if (!user) {
-        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
-      }
-      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+  jwt.verify(req.token, secretKey, (error, authData) => {
+    if (error) {
+      console.log(`token verification error: ${error}`);
+      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
-  )
+    const id = req.params.id;
+    User.findOneAndUpdate(
+      { _id: id, delFlag: "N" },
+      {
+        $set: {
+          delFlag: "Y"
+        }
+      },
+      {
+        new: true,
+        useFindAndModify: false
+      },
+      (error, user) => {
+        if (error) {
+          console.log(`Error occured fetching user with id ${id}: ${error}`);
+          return res.status(400).json(sendErrorMessage(error, 400));
+        }
+        if (!user) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      }
+    )
+  })
 });
 
 app.get(BASE_URL, verifyToken, (req, res, next) => {
-  jwtVerify(req, res, next);
-  User.find({ delFlag: "N" }, (error, users) => {
+  jwt.verify(req.token, secretKey, (error, authData) => {
     if (error) {
-      console.log(`Error occurred fetching users: ${error}`);
-      return res.status(400).json(sendErrorMessage(error, 400));
+      console.log(`token verification error: ${error}`);
+      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
-    if (users.length === 0) {
-      return res.status(404).json(sendErrorMessage("No user found in database", 404));
-    }
-    return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
-  })
+    User.find({ delFlag: "N" }, (error, users) => {
+      if (error) {
+        console.log(`Error occurred fetching users: ${error}`);
+        return res.status(400).json(sendErrorMessage(error, 400));
+      }
+      if (users.length === 0) {
+        return res.status(404).json(sendErrorMessage("No user found in database", 404));
+      }
+      return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
+    })
+  })  
 });
 
 function verifyToken(req, res, next) {
   const url = req.url;
-  if ((url != BASE_URL || url != BASE_URL + "login") && req.method == "POST") {
+  if ((url != BASE_URL && req.method != "POST") || url != BASE_URL + "login") {
     const bearerHeader = req.headers["authorization"];
     if (!bearerHeader) {
-      return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
+      res.status(403).json(sendErrorMessage('Missing Header Token', 403));
     }
     const token = bearerHeader.split(" ")[1];
     req.token = token;
-    return next();
+    next();
   } else {
     next();
   }
 
-}
-
-function jwtVerify(req, res, next) {
-  const url = req.url;
-  if ((url != BASE_URL || url != BASE_URL + "login") && req.method == "POST") {
-    jwt.verify(req.token, secretKey, (error, authData) => {
-      if (error) {
-        return res.status(403).json(sendErrorMessage("Unauthorized Request", 403))
-      }
-    })
-  }
 }
 
 function sendErrorMessage(message, code = 400) {
