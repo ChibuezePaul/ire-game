@@ -37,6 +37,8 @@ app.use(function (req, res, next) {
 //App Resources
 app.get("/", (req, res) => res.render("index"));
 
+app.get("/test", (req, res) => res.send("change1"));
+
 app.post(BASE_URL, (req, res) => {
   if (!req.body) {
     return res.status(400).json(sendErrorMessage("Missing User Details"));
@@ -208,8 +210,7 @@ app.get(BASE_URL, verifyToken, (req, res, next) => {
 });
 
 function verifyToken(req, res, next) {
-  const url = req.url;
-  if ((url != BASE_URL && req.method != "POST") || url != BASE_URL + "login") {
+  if (req.method != "POST") {
     const bearerHeader = req.headers["authorization"];
     if (!bearerHeader) {
       res.status(403).json(sendErrorMessage('Missing Header Token', 403));
