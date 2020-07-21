@@ -22,9 +22,9 @@ mongoose.connection.on('error', error => console.log(`Database connection error:
 
 //Middlewares
 app.use(express.json());
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');  return next();
-});
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');  return next();
+// });
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(function (req, res, next) {
   if (req.headers['x-forwarded-proto'] === 'https') {
@@ -35,6 +35,13 @@ app.use(function (req, res, next) {
 });
 
 //App Resources
+app.all('/*', function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,HEAD,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'content-Type,x-requested-with');
+  next();
+});
+
 app.get("/", (req, res) => res.render("index"));
 
 app.get("/test", (req, res) => res.send("change1"));
