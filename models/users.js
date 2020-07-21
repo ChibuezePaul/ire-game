@@ -51,7 +51,8 @@ const userSchema = mongoose.Schema({
   },
   delFlag: {
     type: String,
-    default: "N"
+    default: "N",
+    index: true
   }
 },
 {

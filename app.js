@@ -9,21 +9,21 @@ const User = require("./models/users");
 
 //App init
 const app = express();
-const port = process.env.PORT || config.port;
-mongoose.connect(config.dbUrl, { useNewUrlParser: true, useUnifiedTopology: true });
-const db = mongoose.connection;
+const port = process.env.PORT || config.PORT;
+const dbUrl = process.env.DB_URL || config.DB_URL;
+const secretKey = process.env.SECRET_KEY || config.SECRET_KEY;
+const BASE_URL = "/api/user/";
 
-db.on('error', console.error.bind(console, 'connection error:'));
-
-db.once('open', function () {
-  console.log("Database connected successfully");
-});
+//Database Connection
+mongoose.connect(dbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("Database connected successfully"))
+  .catch(() => console.log("Database connection error"));
+mongoose.connection.on('error', error => console.log(`Database connection error: ${error.message}`));
 
 //Middlewares
 app.use(express.json());
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  return next();
+  res.header('Access-Control-Allow-Origin', '*');  return next();
 });
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(function (req, res, next) {
@@ -34,12 +34,8 @@ app.use(function (req, res, next) {
   }
 });
 
-const BASE_URL = "/api/user/"
-const UserQuery = User.find({ delFlag: "N" });
-
-
 //App Resources
-app.get("/", (req, res) => res.render("index"))
+app.get("/", (req, res) => res.render("index"));
 
 app.post(BASE_URL, (req, res) => {
   if (!req.body) {
@@ -60,32 +56,26 @@ app.post(BASE_URL, (req, res) => {
   const error = newUser.validateSync();
 
   if (error) {
-    console.log(`Bad Detais sent for user with email: ${email}`);
+    console.log(`Bad Details sent for user with username: ${username}`);
     return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").split(",")));
   }
-  else {
-    bcrypt.genSalt(10, (error, salt) => {
-      bcrypt.hash(password, salt, (error, hash) => {
-        if (error) {
-          console.log(`Error occured hashing password for new user with email: ${email}`);
-          return res.status(400).json(sendErrorMessage(error));
-        }
-        else {
-          newUser.password = hash;
-          newUser.save(error => {
-            if (error) {
-              console.log(`Error occured saving new user with email ${email}: ${error}`);
-              return res.status(400).json(sendErrorMessage(error));
-            }
-            else {
-              return res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
-            }
-          })
-        }
-      })
-    })
-  }
-})
+  bcrypt.genSalt(10, (error, salt) => {
+    bcrypt.hash(password, salt, (error, hash) => {
+      if (error) {
+        console.log(`Error occurred hashing password for new user with email: ${email}`);
+        return res.status(400).json(sendErrorMessage(error));
+      }
+      newUser.password = hash;
+      newUser.save(error => {
+          if (error) {
+            console.log(`Error occurred saving new user with email ${email}: ${error}`);
+            return res.status(400).json(sendErrorMessage(error));
+          }
+          return res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
+        });
+    });
+  })
+});
 
 app.post(BASE_URL + "login", (req, res) => {
   const username = req.body.username;
@@ -94,7 +84,7 @@ app.post(BASE_URL + "login", (req, res) => {
     return res.status(400).json(sendErrorMessage());
   }
 
-  UserQuery.findOne({ username: username }, function (error, user) {
+  User.findOne({ username: username, delFlag: "N" }, function (error, user) {
     if (error) { return res.status(400).json(sendErrorMessage(error, 400)); }
     if (!user) {
       return res.status(404).json(sendErrorMessage(`User not found with username: ${username}`, 404));
@@ -104,21 +94,19 @@ app.post(BASE_URL + "login", (req, res) => {
         throw error;
       }
       if (isMatch) {
-        jwt.sign({ user }, config.secretKey, (error, token) => {
+        jwt.sign({ user }, secretKey, (error, token) => {
           return res.status(200).json(sendSuccessMessage("Bearer " + token));
         })
       }
-      else {
-        return res.status(400).json(sendErrorMessage('Incorrect password'));
-      }
+      return res.status(400).json(sendErrorMessage('Incorrect password'));
     });
   });
-})
+});
 
-app.get(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
-  // jwtVerify(req, res);
+app.get(BASE_URL + ":id", verifyToken, (req, res, next) => {
+  jwtVerify(req, res, next);
   const id = req.params.id;
-  UserQuery.findOne({ _id: id }, (error, user) => {
+  User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
     if (error) {
       console.log(`Error occured fetching user with id ${id}: ${error}`);
       return res.status(400).json(sendErrorMessage(error, 400));
@@ -126,18 +114,16 @@ app.get(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
     if (!user) {
       return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
     }
-    else {
-      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
-    }
+    return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
   });
-})
+});
 
-app.put(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
-  // jwtVerify(req, res);
+app.put(BASE_URL + ":id", verifyToken, (req, res, next) => {
+  jwtVerify(req, res);
   const { username, email, phone, location, avatarId } = req.body;
   const id = req.params.id;
-  UserQuery.findOneAndUpdate(
-    { _id: id },
+  User.findOneAndUpdate(
+    { _id: id, delFlag: "N" },
     {
       $set: {
         username, email, phone, location, avatarId
@@ -155,18 +141,16 @@ app.put(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
       if (!user) {
         return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
-      else {
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
-      }
+      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
     }
-  )
-})
+  );
+});
 
-app.delete(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
-  // jwtVerify(req, res);
+app.delete(BASE_URL + ":id", verifyToken, (req, res, next) => {
+  jwtVerify(req, res, next);
   const id = req.params.id;
-  UserQuery.findOneAndUpdate(
-    { _id: id },
+  User.findOneAndUpdate(
+    { _id: id, delFlag: "N" },
     {
       $set: {
         delFlag: "Y"
@@ -184,46 +168,51 @@ app.delete(BASE_URL + ":id", /*verifyToken,*/ (req, res) => {
       if (!user) {
         return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
-      else {
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
-      }
+      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
     }
   )
-})
+});
 
-app.get(BASE_URL, /*verifyToken,*/ (req, res) => {
-  // jwtVerify(req, res);
-  UserQuery.find({}, (error, users) => {
+app.get(BASE_URL, verifyToken, (req, res, next) => {
+  jwtVerify(req, res, next);
+  User.find({ delFlag: "N" }, (error, users) => {
     if (error) {
-      console.log(`Error occured fetching users: ${error}`);
+      console.log(`Error occurred fetching users: ${error}`);
       return res.status(400).json(sendErrorMessage(error, 400));
     }
-    if (users.length == 0) {
+    if (users.length === 0) {
       return res.status(404).json(sendErrorMessage("No user found in database", 404));
     }
-    else {
-      return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
-    }
+    return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
   })
-})
+});
 
-// function verifyToken(req, res, next) {
-//   const bearerHeader = req.headers["authorization"];
-//   if (!bearerHeader) {
-//     return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
-//   }
-//   const token = bearerHeader.split(" ")[1];
-//   req.token = token;
-//   return next();
-// }
+function verifyToken(req, res, next) {
+  const url = req.url;
+  if ((url != BASE_URL || url != BASE_URL + "login") && req.method == "POST") {
+    const bearerHeader = req.headers["authorization"];
+    if (!bearerHeader) {
+      return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
+    }
+    const token = bearerHeader.split(" ")[1];
+    req.token = token;
+    return next();
+  } else {
+    next();
+  }
 
-// function jwtVerify(req, res) {
-//   jwt.verify(req.token, config.secretKey, (error, authData) => {
-//     if (error) {
-//       return res.status(403).json(sendErrorMessage("Unauthorized Request", 403))
-//     }
-//   })
-// }
+}
+
+function jwtVerify(req, res, next) {
+  const url = req.url;
+  if ((url != BASE_URL || url != BASE_URL + "login") && req.method == "POST") {
+    jwt.verify(req.token, secretKey, (error, authData) => {
+      if (error) {
+        return res.status(403).json(sendErrorMessage("Unauthorized Request", 403))
+      }
+    })
+  }
+}
 
 function sendErrorMessage(message, code = 400) {
   return {
@@ -237,8 +226,8 @@ function sendSuccessMessage(message, code = 200) {
   }
 }
 
-function filterUerInfo(doc) {
-  return doc.toObject({
+function filterUerInfo(user) {
+  return user.toObject({
     versionKey: false,
     transform: (doc, ret, options) => {
       delete ret.password;
@@ -247,5 +236,6 @@ function filterUerInfo(doc) {
     }
   })
 }
+
 //Server Startup
-app.listen(port, console.log(`IRE Game Server Started On Port ${port}...`))
+app.listen(port, console.log(`IRE Game Server Started On Port ${port}...`));
