@@ -22,17 +22,17 @@ mongoose.connection.on('error', error => console.log(`Database connection error:
 
 //Middlewares
 app.use(express.json());
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', '*');  return next();
-// });
-app.use(express.static(path.join(__dirname, 'public/doc')));
-app.use(function (req, res, next) {
-  if (req.headers['x-forwarded-proto'] === 'https') {
-    res.redirect('http://' + req.hostname + req.url);
-  } else {
-    next();
-  }
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');  return next();
 });
+// app.use(express.static(path.join(__dirname, 'public/doc')));
+// app.use(function (req, res, next) {
+//   if (req.headers['x-forwarded-proto'] === 'https') {
+//     res.redirect('http://' + req.hostname + req.url);
+//   } else {
+//     next();
+//   }
+// });
 
 //App Resources
 app.all('/*', function (req, res, next) {
@@ -44,9 +44,9 @@ app.all('/*', function (req, res, next) {
 
 app.get("/", (req, res) => res.render("index"));
 
-app.get("/test", (req, res) => res.send("change1"));
+app.get("/test", (req, res) => res.send("build 1.1"));
 
-app.post(BASE_URL, (req, res) => {
+app.post(BASE_URL + "signup", (req, res) => {
   if (!req.body) {
     return res.status(400).json(sendErrorMessage("Missing User Details"));
   }
@@ -217,7 +217,8 @@ app.get(BASE_URL, verifyToken, (req, res, next) => {
 });
 
 function verifyToken(req, res, next) {
-  if (req.method != "POST") {
+  const url = req.url;
+  if (url != BASE_URL + "login" || url != BASE_URL + "signup") {
     const bearerHeader = req.headers["authorization"];
     if (!bearerHeader) {
       res.status(403).json(sendErrorMessage('Missing Header Token', 403));
