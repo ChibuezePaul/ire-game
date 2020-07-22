@@ -23,7 +23,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.24",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.4",
+    "xlsx-to-json": "^0.3.0"
   },
   "apidoc": {
     "title": "IRE Game Backend API Browser",

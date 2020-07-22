@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const morgan = require("morgan");
+const xlsxtojson = require("xlsx-to-json");
 const config = require("./core/config.json");
 require("./core/database");
 
@@ -16,16 +17,10 @@ app.use((req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(morgan("dev"));
-// app.use(function (req, res, next) {
-//   if (req.headers['x-forwarded-proto'] === 'https') {
-//     res.redirect('http://' + req.hostname + req.url);
-//   } else {
-//     next();
-//   }
-// });
 
-//User Routes
+//Routes
 const { signup, login, getUser, updateUser, deleteUser, getUsers } = require("./routes/user");
+const { getQuestion, getQuestions, deleteQuestion } = require("./routes/question");
 const { sendErrorMessage } = require("./core/utils");
 
 app.all('/*', function (req, res, next) {
@@ -37,7 +32,12 @@ app.all('/*', function (req, res, next) {
 
 //Documentation Page
 app.get("/", (req, res) => res.render("index"));
-app.get("/test", (req, res) => res.send("build 1.2"));
+app.get("/test", (req, res) => res.send("build 1.3"));
+
+//Question Resource
+app.get("/api/question/:id", getQuestion);
+app.get("/api/question", getQuestions);
+app.delete("/api/question/:id", deleteQuestion);
 
 //Unprotected User Resource
 app.post("/api/user/signup", signup);
@@ -53,16 +53,12 @@ app.delete("/api/user/:id", deleteUser);
 app.get("/api/user", getUsers);
 
 function verifyToken(req, res, next) {
-  // if (url != BASE_URL + "login" || url != BASE_URL + "signup") {
-    const bearerHeader = req.headers["authorization"];
-    if (!bearerHeader) {
-      return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
-    }
-    req.token = bearerHeader.split(" ")[1];
-    next();
-  // } else {
-  //   next();
-  // }
+  const bearerHeader = req.headers["authorization"];
+  if (!bearerHeader) {
+    return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
+  }
+  req.token = bearerHeader.split(" ")[1];
+  next();
 }
 
 //Server Startup

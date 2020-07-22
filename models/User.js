@@ -53,6 +53,20 @@ const userSchema = mongoose.Schema({
     type: String,
     default: "N",
     index: true
+  },
+  gameData: {
+    lastLevel: {
+      type: Number,
+      default: 0
+    },
+    lastArena: {
+      type: String,
+      default: "null"
+    },
+    totalCoins: {
+      type: Number,
+      default: 0
+    }
   }
 },
 {
