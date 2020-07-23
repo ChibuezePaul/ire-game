@@ -2,4 +2,5 @@ node_modules
 .DS_Store
 /ire-game
 /core/config.json
+/core/questions.json
 /.idea/
