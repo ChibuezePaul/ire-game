@@ -1,6 +1,7 @@
 const Question = require("../models/Question");
-// const questions = require("../ire-game/questions.json");
+// const questions = require("../questions/questions.json");
 const { sendErrorMessage, sendSuccessMessage } = require("../core/utils");
+// const { SECRET_KEY } = require("../core/config.json")
 
 exports.getQuestions = (req, res) => {
   Question.find({ delFlag: "N" }, (error, questions) => {
@@ -11,7 +12,6 @@ exports.getQuestions = (req, res) => {
     else if (questions.length !== 0) {
       return res.status(200).json(sendSuccessMessage(questions.map(question => filterQuestionInfo(question))));
     }
-    // createQuestion();
     return res.status(404).json(sendErrorMessage("No question found in database", 404));
   });
 }
@@ -56,32 +56,39 @@ exports.deleteQuestion = (req, res, next) => {
   );
 }
 
-// function createQuestion() {
-//   questions.forEach(question => {
-//     const newQuestion = new Question({
-//       yoruba: question[0],
-//       english: question[1],
-//       options: {
-//         option1: {
-//           yoruba: question[2],
-//           english: question[3],
-//         },
-//         option2: {
-//           yoruba: question[4],
-//           english: question[5],
-//         },
-//         option3: {
-//           yoruba: question[6],
-//           english: question[7],
-//         },
-//         option4: {
-//           yoruba: question[8],
-//           english: question[9],
-//         },
-//       }
+// exports.createQuestion = (req, res, next) => {
+//   const secretKey = req.body.secretKey;
+//   if (!secretKey) {
+//     return res.status(403).json(sendErrorMessage(`Unath`, 403));
+//   }
+//   if (secretKey != SECRET_KEY) {
+//     questions.forEach(question => {
+//       const newQuestion = new Question({
+//         yoruba: question[0],
+//         english: question[1],
+//         options: {
+//           option1: {
+//             yoruba: question[2],
+//             english: question[3],
+//           },
+//           option2: {
+//             yoruba: question[4],
+//             english: question[5],
+//           },
+//           option3: {
+//             yoruba: question[6],
+//             english: question[7],
+//           },
+//           option4: {
+//             yoruba: question[8],
+//             english: question[9],
+//           },
+//         }
+//       });
+//       newQuestion.save();
 //     });
-//     newQuestion.save();
-//   });
+//     return res.status(201).json(sendSuccessMessage(`${questions.size()} questions added`, 201));
+//   }
 // }
 
 function filterQuestionInfo(question) {

@@ -24,7 +24,7 @@ const { getQuestion, getQuestions, deleteQuestion } = require("./routes/question
 const { sendErrorMessage } = require("./core/utils");
 
 app.all('/*', function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,HEAD,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'content-Type,x-requested-with');
   next();
@@ -33,11 +33,6 @@ app.all('/*', function (req, res, next) {
 //Documentation Page
 app.get("/", (req, res) => res.render("index"));
 app.get("/test", (req, res) => res.send("build 1.3"));
-
-//Question Resource
-app.get("/api/question/:id", getQuestion);
-app.get("/api/question", getQuestions);
-app.delete("/api/question/:id", deleteQuestion);
 
 //Unprotected User Resource
 app.post("/api/user/signup", signup);
@@ -51,6 +46,12 @@ app.get("/api/user/:id", getUser);
 app.put("/api/user/:id", updateUser);
 app.delete("/api/user/:id", deleteUser);
 app.get("/api/user", getUsers);
+
+//Protected Question Resource
+app.get("/api/question/:id", getQuestion);
+app.get("/api/question", getQuestions);
+app.delete("/api/question/:id", deleteQuestion);
+// app.post("/api/question", createQuestion)
 
 function verifyToken(req, res, next) {
   const bearerHeader = req.headers["authorization"];
