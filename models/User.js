@@ -61,13 +61,13 @@ const userSchema = mongoose.Schema({
     },
     lastArena: {
       type: String,
-      default: "null"
     },
     totalCoins: {
       type: Number,
       default: 0
     }
-  }
+  },
+  emailVerificationCode: Number
 },
 {
   strictQuery: 'throw'

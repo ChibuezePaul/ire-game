@@ -1,5 +1,10 @@
 {
   "PORT": "3000",
   "DB_URL": "mongodb+srv://chibuezepaul:Chibzi44@1@ire-game.svfi3.mongodb.net/ire-game?retryWrites=true&w=majority",
-  "SECRET_KEY": "th1$1$@$ecretKey0f!re-g@me"
+  "SECRET_KEY": "th1$1$@$ecretKey0f!re-g@me",
+  "EMAIL_SERVICE": "gmail",
+  "SENDER_NAME": "IRE-Game",
+  "SENDER_EMAIL": "isoft.code.io@gmail.com",
+  "SENDER_PASSWORD": "olfmfadokckjlssk",
+  "SUBJECT": "IRE-Game - Email Verification Code"
 }

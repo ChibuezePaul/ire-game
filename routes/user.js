@@ -1,7 +1,42 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require('nodemailer');
 const User = require("../models/User");
 const config = require("../core/config.json");
+
+//Mail Sender Init
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || config.EMAIL_SERVICE,
+  auth: {
+    user: process.env.SENDER_EMAIL || config.SENDER_EMAIL,
+    pass: process.env.SENDER_PASSWORD || config.SENDER_PASSWORD
+  }
+});
+
+function composeMail(emailVerificationCode){
+  return `<p>Congratulations,</p>
+    <p>You have successfully downloaded IRE game, your Unique code is: <b>${emailVerificationCode}</b>.
+    <p>Unique code is confidential, please do not share with anyone.</p><br>
+    <p>Thank you,</p>
+    <p>Team Ire.</p>`;
+}
+
+function sendEmailVerificationMail(email, emailVerificationCode){
+  const mailOptions = {
+    from: process.env.SENDER_NAME || config.SENDER_NAME + '<' + process.env.SENDER_EMAIL || config.SENDER_EMAIL + '>',
+    to: email,
+    subject: process.env.SUBJECT || config.SUBJECT,
+    html: composeMail(emailVerificationCode)
+  };
+
+  transporter.sendMail(mailOptions, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log(`Email sent to ${email}: ${info.response}`);
+    }
+  });
+}
 
 const secretKey = process.env.SECRET_KEY || config.SECRET_KEY;
 const { sendErrorMessage, sendSuccessMessage } = require("../core/utils");
@@ -19,7 +54,8 @@ exports.signup = (req, res) => {
     phone: phone,
     gender: gender,
     location: location,
-    avatarId: avatarId
+    avatarId: avatarId,
+    emailVerificationCode: generateEmailVerificationCode()
   });
 
   const error = newUser.validateSync();
@@ -40,6 +76,7 @@ exports.signup = (req, res) => {
           console.log(`Error occurred saving new user with email ${email}: ${error}`);
           return res.status(400).json(sendErrorMessage(error));
         }
+        sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
         return res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
       });
     });
@@ -176,6 +213,38 @@ exports.getUsers = (req, res, next) => {
   });
 }
 
+exports.verifyEmail = (req, res, next) => {
+  jwt.verify(req.token, secretKey, (error, authData) => {
+    if (error) {
+      console.log(`token verification error: ${error}`);
+      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+    }
+    const id = req.params.id;
+    User.findOneAndUpdate(
+      { _id: id, delFlag: "N" },
+      {
+        $set: {
+          emailVerificationCode: 0
+        }
+      },
+      {
+        new: true,
+        useFindAndModify: false
+      },
+      (error, user) => {
+        if (error) {
+          console.log(`Error occured veryfying email for user with id ${id}: ${error}`);
+          return res.status(400).json(sendErrorMessage(error, 400));
+        }
+        if (!user) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      }
+    );
+  });
+}
+
 function filterUerInfo(user) {
   return user.toObject({
     versionKey: false,
@@ -185,4 +254,8 @@ function filterUerInfo(user) {
       return ret;
     }
   })
+}
+
+function generateEmailVerificationCode() {
+  return Math.floor(1000 + Math.random() * 1000);
 }
