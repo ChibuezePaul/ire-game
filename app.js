@@ -14,7 +14,9 @@ const port = process.env.PORT || config.PORT;
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader("Content-Type", "application/json");
+  // res.setHeader("Content-Type", "application/json");
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,HEAD,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, X-Requested-With');
   return next();
 });
 app.use(express.static(path.join(__dirname, 'public/doc')));
@@ -26,9 +28,9 @@ const { getQuestion, getQuestions, deleteQuestion } = require("./routes/question
 const { sendErrorMessage } = require("./core/utils");
 
 app.all('/*', function (req, res, next) {
-  // res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,HEAD,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'content-Type,x-requested-with');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,HEAD,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-Type,x-requested-with');
   next();
 });
 
