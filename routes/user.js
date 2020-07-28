@@ -239,7 +239,9 @@ exports.verifyEmail = (req, res, next) => {
         if (!user) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        jwt.sign({ user }, secretKey, (error, token) => {
+          return res.status(200).json(sendSuccessMessage("User: "+filterUerInfo(user) + "\n Bearer " + token));
+        })
       }
     );
   });
