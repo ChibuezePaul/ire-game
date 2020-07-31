@@ -1,6 +1,5 @@
 node_modules
 .DS_Store
-/questions
-/core/config.json
-/core/questions.json
+questions
+core/config.json
 /.idea/
