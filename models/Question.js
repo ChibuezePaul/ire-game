@@ -1,8 +1,16 @@
 const mongoose = require("mongoose");
 
 const questionSchema = mongoose.Schema({
-  yoruba: String,
-  english: String,
+  yoruba: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  english: {
+    type: String,
+    required: true,
+    unique: true
+  },
   options: {
     option1: {
       yoruba: String,
@@ -47,4 +55,4 @@ const questionSchema = mongoose.Schema({
   strictQuery: 'throw'
 });
 
-const Question = module.exports = mongoose.model("Question", questionSchema);
+module.exports = mongoose.model("Question", questionSchema);

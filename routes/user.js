@@ -1,45 +1,9 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require('nodemailer');
 const User = require("../models/User");
 const config = require("../core/config.json");
-
-//Mail Sender Init
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || config.EMAIL_SERVICE,
-  auth: {
-    user: process.env.SENDER_EMAIL || config.SENDER_EMAIL,
-    pass: process.env.SENDER_PASSWORD || config.SENDER_PASSWORD
-  }
-});
-
-function composeMail(emailVerificationCode){
-  return `<p>Congratulations,</p>
-    <p>You have successfully downloaded IRE game, your Unique code is: <b>${emailVerificationCode}</b>.
-    <p>Unique code is confidential, please do not share with anyone.</p><br>
-    <p>Thank you,</p>
-    <p>Team Ire.</p>`;
-}
-
-function sendEmailVerificationMail(email, emailVerificationCode){
-  const mailOptions = {
-    from: process.env.SENDER_NAME || config.SENDER_NAME + '<' + process.env.SENDER_EMAIL || config.SENDER_EMAIL + '>',
-    to: email,
-    subject: process.env.SUBJECT || config.SUBJECT,
-    html: composeMail(emailVerificationCode)
-  };
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(`Email sent to ${email}: ${info.response}`);
-    }
-  });
-}
-
-const secretKey = process.env.SECRET_KEY || config.SECRET_KEY;
-const { sendErrorMessage, sendSuccessMessage } = require("../core/utils");
+const SECRET_KEY = process.env.SECRET_KEY || config.SECRET_KEY;
+const { sendErrorMessage, sendSuccessMessage, filterUerInfo, generateEmailVerificationCode, sendEmailVerificationMail } = require("../core/utils");
 
 exports.signup = (req, res) => {
   if (!req.body) {
@@ -61,19 +25,19 @@ exports.signup = (req, res) => {
   const error = newUser.validateSync();
 
   if (error) {
-    console.log(`Bad Details sent for user with username: ${username}`);
-    return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").split(",")));
+    console.error(`Bad Details sent for user with username: ${username}`);
+    return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").trim().split(",")));
   }
   bcrypt.genSalt(10, (error, salt) => {
     bcrypt.hash(password, salt, (error, hash) => {
       if (error) {
-        console.log(`Error occurred hashing password for new user with email: ${email}`);
+        console.error(`Error occurred hashing password for new user with email: ${email}`);
         return res.status(400).json(sendErrorMessage(error));
       }
       newUser.password = hash;
       newUser.save(error => {
         if (error) {
-          console.log(`Error occurred saving new user with email ${email}: ${error}`);
+          console.error(`Error occurred saving new user with email ${email}: ${error}`);
           return res.status(400).json(sendErrorMessage(error));
         }
         sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
@@ -102,7 +66,7 @@ exports.login = (req, res) => {
       if (!isMatch) {
         return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
-      jwt.sign({ user }, secretKey, (error, token) => {
+      jwt.sign({ user }, SECRET_KEY, (error, token) => {
         return res.status(200).json(sendSuccessMessage("Bearer " + token));
       })
     });
@@ -110,15 +74,15 @@ exports.login = (req, res) => {
 }
 
 exports.getUser = (req, res, next) => {
-  jwt.verify(req.token, secretKey, (error, authData) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.log(`token verification error: ${error}`);
+      console.error(`token verification error: ${error}`);
       return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
     const id = req.params.id;
     User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
       if (error) {
-        console.log(`Error occured fetching user with id ${id}: ${error}`);
+        console.error(`Error occured fetching user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
@@ -130,9 +94,9 @@ exports.getUser = (req, res, next) => {
 }
 
 exports.updateUser = (req, res, next) => {
-  jwt.verify(req.token, secretKey, (error, authData) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.log(`token verification error: ${error}`);
+      console.error(`token verification error: ${error}`);
       return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
     const { username, email, phone, location, avatarId } = req.body;
@@ -150,7 +114,7 @@ exports.updateUser = (req, res, next) => {
       },
       (error, user) => {
         if (error) {
-          console.log(`Error occured fetching user with id ${id}: ${error}`);
+          console.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -163,9 +127,9 @@ exports.updateUser = (req, res, next) => {
 }
 
 exports.deleteUser = (req, res, next) => {
-  jwt.verify(req.token, secretKey, (error, authData) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.log(`token verification error: ${error}`);
+      console.error(`token verification error: ${error}`);
       return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
     const id = req.params.id;
@@ -182,7 +146,7 @@ exports.deleteUser = (req, res, next) => {
       },
       (error, user) => {
         if (error) {
-          console.log(`Error occured fetching user with id ${id}: ${error}`);
+          console.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -195,14 +159,14 @@ exports.deleteUser = (req, res, next) => {
 }
 
 exports.getUsers = (req, res, next) => {
-  jwt.verify(req.token, secretKey, (error, authData) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.log(`token verification error: ${error}`);
+      console.error(`token verification error: ${error}`);
       return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
     }
     User.find({ delFlag: "N" }, (error, users) => {
       if (error) {
-        console.log(`Error occurred fetching users: ${error}`);
+        console.error(`Error occurred fetching users: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (users.length === 0) {
@@ -214,50 +178,29 @@ exports.getUsers = (req, res, next) => {
 }
 
 exports.verifyEmail = (req, res, next) => {
-  jwt.verify(req.token, secretKey, (error, authData) => {
-    if (error) {
-      console.log(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
-    }
-    const id = req.params.id;
-    User.findOneAndUpdate(
-      { _id: id, delFlag: "N" },
-      {
-        $set: {
-          emailVerificationCode: 0
-        }
-      },
-      {
-        new: true,
-        useFindAndModify: false
-      },
-      (error, user) => {
-        if (error) {
-          console.log(`Error occured veryfying email for user with id ${id}: ${error}`);
-          return res.status(400).json(sendErrorMessage(error, 400));
-        }
-        if (!user) {
-          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
-        }
-        jwt.sign({ user }, secretKey, (error, token) => {
-          return res.status(200).json(sendSuccessMessage("User: "+filterUerInfo(user) + "\n Bearer " + token));
-        })
+  const id = req.params.id;
+  User.findOneAndUpdate(
+    { _id: id, delFlag: "N" },
+    {
+      $set: {
+        emailVerificationCode: 0
       }
-    );
-  });
-}
-
-function filterUerInfo(user) {
-  return user.toObject({
-    versionKey: false,
-    transform: (doc, ret, options) => {
-      delete ret.password;
-      delete ret.delFlag;
-      return ret;
+    },
+    {
+      new: true,
+      useFindAndModify: false
+    },
+    (error, user) => {
+      if (error) {
+        console.error(`Error occured veryfying email for user with id ${id}: ${error}`);
+        return res.status(400).json(sendErrorMessage(error, 400));
+      }
+      if (!user) {
+        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+      }
+      jwt.sign({ user }, SECRET_KEY, (error, token) => {
+        return res.status(200).json([{ "User: ": filterUerInfo(user) }, sendSuccessMessage("Bearer " + token)]);
+      })
     }
-  })
-}
-
-function generateEmailVerificationCode() {
-  return Math.floor(1000 + Math.random() * 1000);
+  );
 }

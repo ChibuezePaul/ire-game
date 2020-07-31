@@ -7,7 +7,7 @@ require("./core/database");
 
 //App init
 const app = express();
-const port = process.env.PORT || config.PORT;
+const PORT = process.env.PORT || config.PORT;
 
 //Middlewares
 app.use(express.json());
@@ -22,11 +22,13 @@ app.options("*",(req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(morgan("dev"));
+const { verifyToken } = require("./core/utils");
 
 //Routes
 const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail } = require("./routes/user");
-const { getQuestion, getQuestions, deleteQuestion } = require("./routes/question");
-const { sendErrorMessage } = require("./core/utils");
+const { getQuestion, getQuestions, deleteQuestion, createQuestion, updateQuestion } = require("./routes/question");
+const USER_URI = "/api/user"
+const QUESTION_URI = "/api/question"
 
 app.all('/*', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -40,33 +42,25 @@ app.get("/", (req, res) => res.render("index"));
 app.get("/test", (req, res) => res.send("build 1.3"));
 
 //Unprotected User Resource
-app.post("/api/user/signup", signup);
-app.post("/api/user/login", login);
+app.post(`${USER_URI}/signup`, signup);
+app.post(`${USER_URI}/login`, login);
+app.put(`${USER_URI}/email/:id`, verifyEmail);
 
 //Token Middleware
 app.use(verifyToken);
 
 //Protected User Resource
-app.get("/api/user/:id", getUser);
-app.put("/api/user/:id", updateUser);
-app.delete("/api/user/:id", deleteUser);
-app.get("/api/user", getUsers);
-app.post("/api/user/email/:id", verifyEmail);
+app.get(`${USER_URI}/:id`, getUser);
+app.put(`${USER_URI}/:id`, updateUser);
+app.delete(`${USER_URI}/:id`, deleteUser);
+app.get(USER_URI, getUsers);
 
 //Protected Question Resource
-app.get("/api/question/:id", getQuestion);
-app.get("/api/question", getQuestions);
-app.delete("/api/question/:id", deleteQuestion);
-// app.post("/api/question", createQuestion)
-
-function verifyToken(req, res, next) {
-  const bearerHeader = req.headers["authorization"];
-  if (!bearerHeader) {
-    return res.status(403).json(sendErrorMessage('Missing Header Token', 403));
-  }
-  req.token = bearerHeader.split(" ")[1];
-  next();
-}
+app.get(QUESTION_URI, getQuestions);
+app.post(QUESTION_URI, createQuestion)
+app.get(`${QUESTION_URI}/:id`, getQuestion);
+app.delete(`${QUESTION_URI}/:id`, deleteQuestion);
+app.put(`${QUESTION_URI}/:id`, updateQuestion);
 
 //Server Startup
-app.listen(port, console.log(`IRE Game Server Started On Port ${port}...`));
+app.listen(PORT, console.log(`IRE Game Server Started On Port ${PORT}...`));
