@@ -25,7 +25,7 @@ app.use(morgan("dev"));
 const { verifyToken } = require("./core/utils");
 
 //Routes
-const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail } = require("./routes/user");
+const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking } = require("./routes/user");
 const { getQuestion, getQuestions, deleteQuestion, createQuestion, updateQuestion } = require("./routes/question");
 const USER_URI = "/api/user"
 const QUESTION_URI = "/api/question"
@@ -50,10 +50,12 @@ app.put(`${USER_URI}/email/:id`, verifyEmail);
 app.use(verifyToken);
 
 //Protected User Resource
-app.get(`${USER_URI}/:id`, getUser);
+
 app.put(`${USER_URI}/:id`, updateUser);
 app.delete(`${USER_URI}/:id`, deleteUser);
 app.get(USER_URI, getUsers);
+app.get(`${USER_URI}/ranking`, getUsersRanking);
+app.get(`${USER_URI}/:id`, getUser);
 
 //Protected Question Resource
 app.get(QUESTION_URI, getQuestions);

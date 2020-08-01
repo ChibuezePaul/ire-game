@@ -67,7 +67,7 @@ exports.login = (req, res) => {
         return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
       jwt.sign({ user }, SECRET_KEY, (error, token) => {
-        return res.status(200).json(sendSuccessMessage("Bearer " + token));
+        return res.status(200).json([{ User: filterUerInfo(user) },sendSuccessMessage("Bearer " + token)]);
       })
     });
   });
@@ -77,7 +77,7 @@ exports.getUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
     User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
@@ -97,7 +97,7 @@ exports.updateUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { username, email, phone, location, avatarId } = req.body;
     const id = req.params.id;
@@ -130,7 +130,7 @@ exports.deleteUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
     User.findOneAndUpdate(
@@ -162,7 +162,7 @@ exports.getUsers = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     User.find({ delFlag: "N" }, (error, users) => {
       if (error) {
@@ -184,7 +184,7 @@ exports.verifyEmail = (req, res, next) => {
     {
       $set: {
         emailVerificationCode: 0
-      }
+      },
     },
     {
       new: true,
@@ -199,8 +199,29 @@ exports.verifyEmail = (req, res, next) => {
         return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
       jwt.sign({ user }, SECRET_KEY, (error, token) => {
-        return res.status(200).json([{ "User: ": filterUerInfo(user) }, sendSuccessMessage("Bearer " + token)]);
+        return res.status(200).json([{ User: filterUerInfo(user) }, sendSuccessMessage("Bearer " + token)]);
       })
     }
   );
+}
+
+exports.getUsersRanking = (req, res, next) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
+    if (error) {
+      console.error(`token verification error: ${error}`);
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
+    }
+    User.find({ delFlag: "N",  }, (error, users) => {
+      if (error) {
+        console.error(`Error occurred fetching users: ${error}`);
+        return res.status(400).json(sendErrorMessage(error, 400));
+      }
+      if (users.length === 0) {
+        return res.status(404).json(sendErrorMessage("No user found in database", 404));
+      }
+      return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
+    })
+      .sort({ 'gameData.totalCoins': -1 })
+      .limit(10);
+  });
 }

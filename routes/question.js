@@ -8,7 +8,7 @@ exports.getQuestions = (req, res) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     Question.find({ delFlag: "N" }, (error, questions) => {
       if (error) {
@@ -27,7 +27,7 @@ exports.getQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
     Question.findOne({ _id: id, delFlag: "N" }, (error, question) => {
@@ -47,7 +47,7 @@ exports.deleteQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
     Question.findOneAndUpdate(
@@ -79,15 +79,15 @@ exports.createQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const API_KEY = req.headers["x-api-key"];
     if (!API_KEY) {
-      return res.status(403).json(sendErrorMessage("Unathorized User", 403));
+      return res.status(401).json(sendErrorMessage("Unathorized User", 401));
     }
 
     if (API_KEY != SECRET_KEY) {
-      return res.status(403).json(sendErrorMessage("Unathorized User. Invalid Api-Key", 403));
+      return res.status(401).json(sendErrorMessage("Unathorized User. Invalid Api-Key", 401));
     }
     let questionCount = 1;
     let failedCount;
@@ -135,7 +135,7 @@ exports.updateQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
-      return res.status(403).json(sendErrorMessage("Unauthorized Request", 403));
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { yoruba, english, options } = req.body;
     const id = req.params.id;

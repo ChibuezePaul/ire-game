@@ -64,6 +64,18 @@ const userSchema = mongoose.Schema({
     },
     totalCoins: {
       type: Number,
+      default: 0,
+    },
+    totalLife: {
+      type: Number,
+      default: 0
+    },
+    languageId: {
+      type: Number,
+      default: 0
+    },
+    arenaId: {
+      type: Number,
       default: 0
     }
   },
