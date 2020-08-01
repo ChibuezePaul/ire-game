@@ -1,8 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const config = require("../core/config.json");
-const SECRET_KEY = process.env.SECRET_KEY || config.SECRET_KEY;
+const { SECRET_KEY } = require("../core/config.js");
 const { sendErrorMessage, sendSuccessMessage, filterUerInfo, generateEmailVerificationCode, sendEmailVerificationMail } = require("../core/utils");
 
 exports.signup = (req, res) => {

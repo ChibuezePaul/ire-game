@@ -1,11 +1,17 @@
 const nodemailer = require('nodemailer');
-const config = require("../core/config.json");
+const {
+  EMAIL_SERVICE,
+  SENDER_NAME,
+  SENDER_EMAIL,
+  SENDER_PASSWORD,
+  SUBJECT
+} = require("./config.js");
 
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || config.EMAIL_SERVICE,
+  service: EMAIL_SERVICE,
   auth: {
-    user: process.env.SENDER_EMAIL || config.SENDER_EMAIL,
-    pass: process.env.SENDER_PASSWORD || config.SENDER_PASSWORD
+    user: SENDER_EMAIL,
+    pass: SENDER_PASSWORD
   }
 });
 
@@ -45,7 +51,7 @@ exports.filterQuestionInfo = (question) => {
 exports.verifyToken = (req, res, next) => {
   const bearerHeader = req.headers["authorization"];
   if (!bearerHeader) {
-    return res.status(403).json(this.sendErrorMessage('Missing Header Token', 403));
+    return res.status(401).json(this.sendErrorMessage('Missing Header Token', 401));
   }
   req.token = bearerHeader.split(" ")[1];
   next();
@@ -57,9 +63,9 @@ exports.generateEmailVerificationCode = () => {
 
 exports.sendEmailVerificationMail = (email, emailVerificationCode) => {
   const mailOptions = {
-    from: process.env.SENDER_NAME || config.SENDER_NAME + '<' + process.env.SENDER_EMAIL || config.SENDER_EMAIL + '>',
+    from: SENDER_NAME + '<' + SENDER_EMAIL + '>',
     to: email,
-    subject: process.env.SUBJECT || config.SUBJECT,
+    subject: SUBJECT,
     html: emailVerificationText(emailVerificationCode)
   };
 

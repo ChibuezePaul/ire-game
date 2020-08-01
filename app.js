@@ -2,12 +2,11 @@
 const express = require("express");
 const path = require("path");
 const morgan = require("morgan");
-const config = require("./core/config.json");
-require("./core/database");
 
 //App init
 const app = express();
-const PORT = process.env.PORT || config.PORT;
+require("./core/database");
+const { PORT } = require("./core/config.js");
 
 //Middlewares
 app.use(express.json());
@@ -50,7 +49,6 @@ app.put(`${USER_URI}/email/:id`, verifyEmail);
 app.use(verifyToken);
 
 //Protected User Resource
-
 app.put(`${USER_URI}/:id`, updateUser);
 app.delete(`${USER_URI}/:id`, deleteUser);
 app.get(USER_URI, getUsers);

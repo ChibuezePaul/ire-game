@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const Question = require("../models/Question");
 const questions = process.env.QUESTIONS || require("../questions/questions.json");
 const { sendErrorMessage, sendSuccessMessage, filterQuestionInfo } = require("../core/utils");
-const { SECRET_KEY } = require("../core/config.json");
+const { SECRET_KEY } = require("../core/config.js");
 
 exports.getQuestions = (req, res) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
