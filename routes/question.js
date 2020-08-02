@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Question = require("../models/Question");
-const questions = process.env.QUESTIONS || require("../questions/questions.json");
+let questions = process.env.QUESTIONS || require("../questions/questions.json");
 const { sendErrorMessage, sendSuccessMessage, filterQuestionInfo } = require("../core/utils");
 const { SECRET_KEY } = require("../core/config.js");
 
@@ -91,7 +91,13 @@ exports.createQuestion = (req, res, next) => {
     }
     let questionCount = 1;
     let failedCount;
-    questions.forEach(question => {
+    console.log(typeof questions)
+    console.log("questions lenth", questions.length)
+    // questions = JSON.stringify(questions);
+    // questions.forEach(question => {
+    for (let index = 0; index < questions.length; index++) {
+      const question = questions[index];
+      
       const newQuestion = new Question({
         yoruba: question[0],
         english: question[1],
@@ -126,7 +132,7 @@ exports.createQuestion = (req, res, next) => {
           failedCount = 0;
           console.error(`Error occured creating question: ${error}`)
         });
-    });
+    }
     return res.status(201).json(sendSuccessMessage(`${failedCount || questionCount} questions added`, 201));
   });
 }
