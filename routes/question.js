@@ -91,13 +91,13 @@ exports.createQuestion = (req, res, next) => {
     }
     let questionCount = 1;
     let failedCount;
-    console.log(typeof questions)
+    
+    if (typeof questions === "string") {
+      questions = JSON.parse(questions); 
+      console.log("questions parsed successfully") 
+    }
     console.log("questions lenth", questions.length)
-    // questions = JSON.stringify(questions);
-    // questions.forEach(question => {
-    for (let index = 0; index < questions.length; index++) {
-      const question = questions[index];
-      
+    questions.forEach(question => {
       const newQuestion = new Question({
         yoruba: question[0],
         english: question[1],
@@ -125,14 +125,14 @@ exports.createQuestion = (req, res, next) => {
 
       if (error) {
         console.error(`Bad Details sent for question : ${questionCount}`);
-        return res.status(400).json(sendErrorMessage(error.message.replace("Question validation failed:", "").replace(".", ` at question ${ questionCount }`).trim().split(",")));
+        return res.status(400).json(sendErrorMessage(error.message.replace("Question validation failed:", "").replace(".", ` at question ${questionCount}`).trim().split(",")));
       }
       newQuestion.save()
         .catch((error) => {
           failedCount = 0;
           console.error(`Error occured creating question: ${error}`)
         });
-    }
+    });
     return res.status(201).json(sendSuccessMessage(`${failedCount || questionCount} questions added`, 201));
   });
 }
