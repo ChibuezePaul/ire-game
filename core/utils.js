@@ -27,6 +27,10 @@ exports.sendSuccessMessage = (message, code = 200) => {
   }
 }
 
+exports.isUserNotFoundError = (error) => {
+  return error.toString().indexOf("CastError") != -1
+}
+
 exports.filterUerInfo = (user) => {
   return user.toObject({
     versionKey: false,

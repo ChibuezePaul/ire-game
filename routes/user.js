@@ -2,13 +2,17 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { SECRET_KEY } = require("../core/config.js");
-const { sendErrorMessage, sendSuccessMessage, filterUerInfo, generateEmailVerificationCode, sendEmailVerificationMail } = require("../core/utils");
+const { sendErrorMessage, sendSuccessMessage, filterUerInfo, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError } = require("../core/utils");
 
 exports.signup = (req, res) => {
   if (!req.body) {
     return res.status(400).json(sendErrorMessage("Missing User Details"));
   }
   const { username, password, email, phone, gender, location, avatarId } = req.body;
+
+  if (!username || !password || !email || !gender || !location ) {
+    return res.status(400).json(sendErrorMessage("Missing body parameters"));
+  }
 
   const newUser = new User({
     username: username,
@@ -99,6 +103,9 @@ exports.updateUser = (req, res, next) => {
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { username, email, phone, location, avatarId } = req.body;
+    if (!username || !email || !location || avatarId == null) {
+      return res.status(400).json(sendErrorMessage("Missing body parameters"));
+    }
     const id = req.params.id;
     User.findOneAndUpdate(
       { _id: id, delFlag: "N" },
@@ -113,6 +120,48 @@ exports.updateUser = (req, res, next) => {
       },
       (error, user) => {
         if (error) {
+          if (isUserNotFoundError(error)) {
+            return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+          }
+          console.error(`Error occured fetching user with id ${id}: ${error}`);
+          return res.status(400).json(sendErrorMessage(error, 400));
+        }
+        if (!user) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      }
+    );
+  });
+}
+
+exports.updateUserGameData = (req, res, next) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
+    if (error) {
+      console.error(`token verification error: ${error}`);
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
+    }
+    const { gameData } = req.body;
+    if (Object.keys(gameData).length != 6) {
+      return res.status(400).json(sendErrorMessage("Missing body parameters"));
+    }
+    const id = req.params.id;
+    User.findOneAndUpdate(
+      { _id: id, delFlag: "N" },
+      {
+        $set: {
+          gameData: gameData
+        }
+      },
+      {
+        new: true,
+        useFindAndModify: false
+      },
+      (error, user) => {
+        if (error) {
+          if (isUserNotFoundError(error)) {
+            return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+          }
           console.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
@@ -145,6 +194,9 @@ exports.deleteUser = (req, res, next) => {
       },
       (error, user) => {
         if (error) {
+          if (isUserNotFoundError(error)) {
+            return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+          }
           console.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
@@ -191,6 +243,9 @@ exports.verifyEmail = (req, res, next) => {
     },
     (error, user) => {
       if (error) {
+        if (isUserNotFoundError(error)) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
         console.error(`Error occured veryfying email for user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
