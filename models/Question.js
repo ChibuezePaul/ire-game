@@ -50,6 +50,14 @@ const questionSchema = mongoose.Schema({
     default: "N",
     index: true
   },
+  arena: {
+    type: String,
+    required: true
+  },
+  level: {
+    type: Number,
+    required: true
+  },
 },
 {
   strictQuery: 'throw'

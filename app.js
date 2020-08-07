@@ -25,7 +25,7 @@ const { verifyToken } = require("./core/utils");
 
 //Routes
 const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData } = require("./routes/user");
-const { getQuestion, getQuestions, deleteQuestion, createQuestion, updateQuestion } = require("./routes/question");
+const { getQuestionsForLevel, getQuestionsForArena, deleteQuestion, createQuestion, updateQuestion } = require("./routes/question");
 const USER_URI = "/api/user"
 const QUESTION_URI = "/api/question"
 
@@ -57,9 +57,9 @@ app.get(`${USER_URI}/ranking`, getUsersRanking);
 app.get(`${USER_URI}/:id`, getUser);
 
 //Protected Question Resource
-app.get(QUESTION_URI, getQuestions);
+app.get(`${QUESTION_URI}/:arena`, getQuestionsForArena);
 app.post(QUESTION_URI, createQuestion)
-app.get(`${QUESTION_URI}/:id`, getQuestion);
+app.get(`${QUESTION_URI}/:arena/:level`, getQuestionsForLevel);
 app.delete(`${QUESTION_URI}/:id`, deleteQuestion);
 app.put(`${QUESTION_URI}/:id`, updateQuestion);
 

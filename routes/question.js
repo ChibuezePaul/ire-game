@@ -1,44 +1,48 @@
 const jwt = require("jsonwebtoken");
 const Question = require("../models/Question");
-let questions = process.env.QUESTIONS || require("../questions/questions.json");
+let questions = process.env.QUESTIONS || require("../questions/arenaLagosQuestions.json");
 const { sendErrorMessage, sendSuccessMessage, filterQuestionInfo } = require("../core/utils");
 const { SECRET_KEY } = require("../core/config.js");
 
-exports.getQuestions = (req, res) => {
+exports.getQuestionsForArena = (req, res) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
-    Question.find({ delFlag: "N" }, (error, questions) => {
+    const arena = req.params.arena;
+    Question.find({ delFlag: "N", arena: arena }, (error, questions) => {
       if (error) {
         console.error(`Error occurred fetching questions: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
-      else if (questions.length !== 0) {
-        return res.status(200).json(sendSuccessMessage(questions.map(question => filterQuestionInfo(question))));
+      else if (questions.length === 0) {
+        return res.status(404).json(sendErrorMessage(`No question found for arena ${arena}`, 404));
       }
-      return res.status(404).json(sendErrorMessage("No question found in database", 404));
+      return res.status(200).json(sendSuccessMessage(questions.map(question => filterQuestionInfo(question))));
     });
   });
 }
 
-exports.getQuestion = (req, res, next) => {
+exports.getQuestionsForLevel = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       console.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
-    const id = req.params.id;
-    Question.findOne({ _id: id, delFlag: "N" }, (error, question) => {
+    const { arena, level } = req.params;
+    Question.find({ delFlag: "N", arena: arena, level: level }, (error, questions) => {
       if (error) {
-        console.error(`Error occured fetching user with id ${id}: ${error}`);
+        console.error(`Error occured fetching questions with arena ${arena}, level ${level}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
-      if (!question) {
-        return res.status(404).json(sendErrorMessage(`Question not found with id: ${id}`, 404));
+      if (!questions) {
+        return res.status(404).json(sendErrorMessage(`Questions not found in arena ${arena}, level ${level}`, 404));
       }
-      return res.status(200).json(sendSuccessMessage(filterQuestionInfo(question)));
+      else if (questions.length === 0) {
+        return res.status(404).json(sendErrorMessage(`No question found in arena ${arena}, level ${level}`, 404));
+      }
+      return res.status(200).json(sendSuccessMessage(questions.map(question => filterQuestionInfo(question))));
     });
   });
 }
@@ -89,6 +93,10 @@ exports.createQuestion = (req, res, next) => {
     if (API_KEY != SECRET_KEY) {
       return res.status(401).json(sendErrorMessage("Unathorized User. Invalid Api-Key", 401));
     }
+    const arena = req.body.arena;
+    if (!req.body || !arena) {
+      return res.status(400).json(sendErrorMessage("Missing body paramater", 400));
+    }
     let questionCount = 1;
     let failedCount;
     
@@ -97,26 +105,35 @@ exports.createQuestion = (req, res, next) => {
       console.log("questions parsed successfully") 
     }
     console.log("questions lenth", questions.length)
-    questions.forEach(question => {
+    let level = 0;
+    // questions.forEach(question => {
+    for (let i = 0; i < questions.length; i++) {
+      let question = questions[i];
+      if (question["Yoruba QUESTIONS"].indexOf("LEVEL") != -1) {
+        level++;
+        continue;
+      }
       const newQuestion = new Question({
-        yoruba: question[0],
-        english: question[1],
+        arena: arena,
+        level: level,
+        yoruba: question["Yoruba QUESTIONS"],
+        english: question["English QUESTIONS"],
         options: {
           option1: {
-            yoruba: question[2],
-            english: question[3],
+            yoruba: question["option 1 - yoruba"],
+            english: question["option 1-English"],
           },
           option2: {
-            yoruba: question[4],
-            english: question[5],
+            yoruba: question["option 2-Yoruba"],
+            english: question["option 2-English"],
           },
           option3: {
-            yoruba: question[6],
-            english: question[7],
+            yoruba: question["option 3-Yoruba"],
+            english: question["option 3-English"],
           },
           option4: {
-            yoruba: question[8],
-            english: question[9],
+            yoruba: question["option 4-Yoruba"],
+            english: question["option 4-English"],
           },
         }
       });
@@ -132,8 +149,8 @@ exports.createQuestion = (req, res, next) => {
           failedCount = 0;
           console.error(`Error occured creating question: ${error}`)
         });
-    });
-    return res.status(201).json(sendSuccessMessage(`${failedCount || questionCount} questions added`, 201));
+    }
+    return res.status(201).json(sendSuccessMessage(`${failedCount || questionCount--} questions added`, 201));
   });
 }
 

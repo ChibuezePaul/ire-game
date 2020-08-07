@@ -54,10 +54,6 @@ const userSchema = mongoose.Schema({
     index: true
   },
   gameData: {
-    lastLevel: {
-      type: Number,
-      default: 0
-    },
     lastArena: {
       type: String,
     },
@@ -73,9 +69,37 @@ const userSchema = mongoose.Schema({
       type: Number,
       default: 0
     },
-    arenaId: {
-      type: Number,
-      default: 0
+    arenas: {
+      arena1: {
+        arenaTries: {
+          type: Number,
+          default: 2
+        },
+        lastLevel: {
+          type: Number,
+          default: 0
+        },
+      },
+      arena2: {
+        arenaTries: {
+          type: Number,
+          default: 1
+        },
+        lastLevel: {
+          type: Number,
+          default: 0
+        },
+      },
+      arena3: {
+        arenaTries: {
+          type: Number,
+          default: 1
+        },
+        lastLevel: {
+          type: Number,
+          default: 0
+        },
+      }
     }
   },
   emailVerificationCode: Number
