@@ -53,6 +53,10 @@ const userSchema = mongoose.Schema({
     default: "N",
     index: true
   },
+  paidFlag: {
+    type: Boolean,
+    default: false
+  },
   gameData: {
     lastArena: {
       type: String,

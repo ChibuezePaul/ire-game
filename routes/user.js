@@ -279,3 +279,38 @@ exports.getUsersRanking = (req, res, next) => {
       .limit(10);
   });
 }
+
+exports.updateUserPaymentStatus = (req, res, next) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
+    if (error) {
+      console.error(`token verification error: ${error}`);
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
+    }
+    const id = req.params.id;
+    User.findOneAndUpdate(
+      { _id: id, delFlag: "N" },
+      {
+        $set: {
+          paidFlag: true
+        }
+      },
+      {
+        new: true,
+        useFindAndModify: false
+      },
+      (error, user) => {
+        if (error) {
+          if (isUserNotFoundError(error)) {
+            return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+          }
+          console.error(`Error occured fetching user with id ${id}: ${error}`);
+          return res.status(400).json(sendErrorMessage(error, 400));
+        }
+        if (!user) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
+        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      }
+    );
+  });
+}
