@@ -73,7 +73,7 @@ exports.login = (req, res) => {
         return res.status(200).json([{ User: filterUerInfo(user) },sendSuccessMessage("Bearer " + token)]);
       })
     });
-  });
+  }).collation({ locale: 'en', strength: 1 });
 }
 
 exports.getUser = (req, res, next) => {

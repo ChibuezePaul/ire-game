@@ -20,7 +20,7 @@ exports.getQuestionsForArena = (req, res) => {
         return res.status(404).json(sendErrorMessage(`No question found for arena ${arena}`, 404));
       }
       return res.status(200).json(sendSuccessMessage(questions.map(question => filterQuestionInfo(question))));
-    });
+    }).collation({ locale: 'en', strength: 1 });
   });
 }
 
@@ -43,7 +43,7 @@ exports.getQuestionsForLevel = (req, res, next) => {
         return res.status(404).json(sendErrorMessage(`No question found in arena ${arena}, level ${level}`, 404));
       }
       return res.status(200).json(sendSuccessMessage(questions.map(question => filterQuestionInfo(question))));
-    });
+    }).collation({ locale: 'en', strength: 1 });
   });
 }
 
