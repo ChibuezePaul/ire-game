@@ -18,13 +18,13 @@ const transporter = nodemailer.createTransport({
 exports.sendErrorMessage = (message, code = 400) => {
   return {
     code, message: `${message || 'Bad Request'}`
-  }
+  };
 }
 
 exports.sendSuccessMessage = (message, code = 200) => {
   return {
     code: `${code}`, message
-  }
+  };
 }
 
 exports.isUserNotFoundError = (error) => {
@@ -39,7 +39,7 @@ exports.filterUerInfo = (user) => {
       delete ret.delFlag;
       return ret;
     }
-  })
+  });
 }
 
 exports.filterQuestionInfo = (question) => {
@@ -49,7 +49,7 @@ exports.filterQuestionInfo = (question) => {
       delete ret.delFlag;
       return ret;
     }
-  })
+  });
 }
 
 exports.verifyToken = (req, res, next) => {

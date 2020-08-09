@@ -142,7 +142,7 @@ exports.updateUserGameData = (req, res, next) => {
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { gameData } = req.body;
-    if (Object.keys(gameData).length != 6) {
+    if (Object.keys(gameData).length < 3) {
       return res.status(400).json(sendErrorMessage("Missing body parameters"));
     }
     const id = req.params.id;

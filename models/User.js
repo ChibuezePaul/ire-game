@@ -60,14 +60,11 @@ const userSchema = mongoose.Schema({
   gameData: {
     lastArena: {
       type: String,
+      default: ""
     },
     totalCoins: {
       type: Number,
       default: 0,
-    },
-    totalLife: {
-      type: Number,
-      default: 0
     },
     languageId: {
       type: Number,
@@ -75,7 +72,7 @@ const userSchema = mongoose.Schema({
     },
     arenas: {
       arena1: {
-        arenaTries: {
+        attempt: {
           type: Number,
           default: 2
         },
@@ -83,9 +80,13 @@ const userSchema = mongoose.Schema({
           type: Number,
           default: 0
         },
+        lifeLine: {
+          type: Array(2),
+          default: [1,1,1]
+        }
       },
       arena2: {
-        arenaTries: {
+        attempt: {
           type: Number,
           default: 1
         },
@@ -93,9 +94,13 @@ const userSchema = mongoose.Schema({
           type: Number,
           default: 0
         },
+        lifeLine: {
+          type: Array(2),
+          default: [1,1,1]
+        }
       },
       arena3: {
-        arenaTries: {
+        attempt: {
           type: Number,
           default: 1
         },
@@ -103,6 +108,10 @@ const userSchema = mongoose.Schema({
           type: Number,
           default: 0
         },
+        lifeLine: {
+          type: Array(2),
+          default: [1,1,1]
+        }
       }
     }
   },

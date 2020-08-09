@@ -33,7 +33,7 @@ exports.getQuestionsForLevel = (req, res, next) => {
     const { arena, level } = req.params;
     Question.find({ delFlag: "N", arena: arena, level: level }, (error, questions) => {
       if (error) {
-        console.error(`Error occured fetching questions with arena ${arena}, level ${level}: ${error}`);
+        console.error(`Error occurred fetching questions with arena ${arena}, level ${level}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!questions) {
@@ -67,7 +67,7 @@ exports.deleteQuestion = (req, res, next) => {
       },
       (error, question) => {
         if (error) {
-          console.error(`Error occured fetching question with id ${id}: ${error}`);
+          console.error(`Error occurred fetching question with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!question) {
@@ -79,6 +79,39 @@ exports.deleteQuestion = (req, res, next) => {
   });
 }
 
+exports.deleteQuestionsInArena = (req, res, next) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
+    if (error) {
+      console.error(`token verification error: ${error}`);
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
+    }
+    const arena = req.params.arena;
+    Question.deleteMany({ arena: arena },
+    // findOneAndUpdate(
+    //   { arena: arena, delFlag: "N" },
+    //   {
+    //     $set: {
+    //       delFlag: "Y"
+    //     }
+    //   },
+    //   {
+    //     new: true,
+    //     useFindAndModify: false
+    //   },
+      (error, questions) => {
+        if (error) {
+          console.error(`Error occurred deleting questions in arena ${arena}: ${error}`);
+          return res.status(400).json(sendErrorMessage(error, 400));
+        }
+        // if (!questions) {
+        //   return res.status(404).json(sendErrorMessage(`Questions not found in arena: ${arena}`, 404));
+        // }
+        return res.status(200).json(sendSuccessMessage(`${questions.deletedCount} question(s) deleted`));
+      }
+    ).collation({ locale: 'en', strength: 1 });
+  });
+}
+
 exports.createQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
@@ -87,15 +120,15 @@ exports.createQuestion = (req, res, next) => {
     }
     const API_KEY = req.headers["x-api-key"];
     if (!API_KEY) {
-      return res.status(401).json(sendErrorMessage("Unathorized User", 401));
+      return res.status(401).json(sendErrorMessage("Unauthorized User", 401));
     }
 
-    if (API_KEY != SECRET_KEY) {
-      return res.status(401).json(sendErrorMessage("Unathorized User. Invalid Api-Key", 401));
+    if (API_KEY !== SECRET_KEY) {
+      return res.status(401).json(sendErrorMessage("Unauthorized User. Invalid Api-Key", 401));
     }
     const arena = req.body.arena;
     if (!req.body || !arena) {
-      return res.status(400).json(sendErrorMessage("Missing body paramater", 400));
+      return res.status(400).json(sendErrorMessage("Missing body parameter", 400));
     }
     let questionCount = 1;
     let failedCount;
@@ -104,36 +137,36 @@ exports.createQuestion = (req, res, next) => {
       questions = JSON.parse(questions); 
       console.log("questions parsed successfully") 
     }
-    console.log("questions lenth", questions.length)
+    console.log("questions length", questions.length);
     let level = 0;
     // questions.forEach(question => {
     for (let i = 0; i < questions.length; i++) {
       let question = questions[i];
-      if (question["Yoruba QUESTIONS"].indexOf("LEVEL") != -1) {
+      if (question[0].indexOf("LEVEL") !== -1) {
         level++;
         continue;
       }
       const newQuestion = new Question({
         arena: arena,
         level: level,
-        yoruba: question["Yoruba QUESTIONS"],
-        english: question["English QUESTIONS"],
+        yoruba: question[0],
+        english: question[1],
         options: {
           option1: {
-            yoruba: question["option 1 - yoruba"],
-            english: question["option 1-English"],
+            yoruba: question[2],
+            english: question[3],
           },
           option2: {
-            yoruba: question["option 2-Yoruba"],
-            english: question["option 2-English"],
+            yoruba: question[4],
+            english: question[5],
           },
           option3: {
-            yoruba: question["option 3-Yoruba"],
-            english: question["option 3-English"],
+            yoruba: question[6],
+            english: question[7],
           },
           option4: {
-            yoruba: question["option 4-Yoruba"],
-            english: question["option 4-English"],
+            yoruba: question[8],
+            english: question[9],
           },
         }
       });
@@ -147,7 +180,7 @@ exports.createQuestion = (req, res, next) => {
       newQuestion.save()
         .catch((error) => {
           failedCount = 0;
-          console.error(`Error occured creating question: ${error}`)
+          console.error(`Error occurred creating question: ${error}`)
         });
     }
     return res.status(201).json(sendSuccessMessage(`${failedCount || questionCount--} questions added`, 201));
@@ -175,7 +208,7 @@ exports.updateQuestion = (req, res, next) => {
       },
       (error, question) => {
         if (error) {
-          console.error(`Error occured fetching question with id ${id}: ${error}`);
+          console.error(`Error occurred fetching question with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!question) {
