@@ -31,12 +31,33 @@ exports.isUserNotFoundError = (error) => {
   return error.toString().indexOf("CastError") != -1
 }
 
-exports.filterUerInfo = (user) => {
+exports.filterUserInfo = (user) => {
   return user.toObject({
     versionKey: false,
     transform: (doc, ret, options) => {
       delete ret.password;
       delete ret.delFlag;
+      return ret;
+    }
+  });
+}
+
+exports.filterUserInfoForRank = (user) => {
+  return user.toObject({
+    versionKey: false,
+    transform: (doc, ret, options) => {
+      delete ret.password;
+      delete ret.delFlag;
+      delete ret.email;
+      delete ret.phone;
+      delete ret.gender;
+      delete ret.location;
+      delete ret.createdOn;
+      delete ret.paidFlag;
+      delete ret.gameData.lastArena;
+      delete ret.gameData.languageId;
+      delete ret.gameData.arenas;
+      delete ret.emailVerificationCode;
       return ret;
     }
   });
@@ -65,21 +86,14 @@ exports.generateEmailVerificationCode = () => {
   return Math.floor(1000 + Math.random() * 1000);
 }
 
-exports.sendEmailVerificationMail = (email, emailVerificationCode) => {
+exports.sendEmailVerificationMail = async (email, emailVerificationCode) => {
   const mailOptions = {
     from: SENDER_NAME + '<' + SENDER_EMAIL + '>',
     to: email,
     subject: SUBJECT,
     html: emailVerificationText(emailVerificationCode)
   };
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(`Email sent to ${email}: ${info.response}`);
-    }
-  });
+  return await transporter.sendMail(mailOptions);
 }
 
 function emailVerificationText(emailVerificationCode) {

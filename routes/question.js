@@ -87,25 +87,11 @@ exports.deleteQuestionsInArena = (req, res, next) => {
     }
     const arena = req.params.arena;
     Question.deleteMany({ arena: arena },
-    // findOneAndUpdate(
-    //   { arena: arena, delFlag: "N" },
-    //   {
-    //     $set: {
-    //       delFlag: "Y"
-    //     }
-    //   },
-    //   {
-    //     new: true,
-    //     useFindAndModify: false
-    //   },
       (error, questions) => {
         if (error) {
           console.error(`Error occurred deleting questions in arena ${arena}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
-        // if (!questions) {
-        //   return res.status(404).json(sendErrorMessage(`Questions not found in arena: ${arena}`, 404));
-        // }
         return res.status(200).json(sendSuccessMessage(`${questions.deletedCount} question(s) deleted`));
       }
     ).collation({ locale: 'en', strength: 1 });
@@ -130,16 +116,16 @@ exports.createQuestion = (req, res, next) => {
     if (!req.body || !arena) {
       return res.status(400).json(sendErrorMessage("Missing body parameter", 400));
     }
-    let questionCount = 1;
-    let failedCount;
     
     if (typeof questions === "string") {
       questions = JSON.parse(questions); 
       console.log("questions parsed successfully") 
     }
+
     console.log("questions length", questions.length);
+    let questionCount = 1;
     let level = 0;
-    // questions.forEach(question => {
+
     for (let i = 0; i < questions.length; i++) {
       let question = questions[i];
       if (question[0].indexOf("LEVEL") !== -1) {
@@ -179,11 +165,10 @@ exports.createQuestion = (req, res, next) => {
       }
       newQuestion.save()
         .catch((error) => {
-          failedCount = 0;
           console.error(`Error occurred creating question: ${error}`)
         });
     }
-    return res.status(201).json(sendSuccessMessage(`${failedCount || questionCount--} questions added`, 201));
+    return res.status(201).json(sendSuccessMessage(`${questionCount - 1} questions added`, 201));
   });
 }
 

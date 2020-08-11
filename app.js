@@ -24,7 +24,7 @@ app.use(morgan("dev"));
 const { verifyToken } = require("./core/utils");
 
 //Routes
-const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus } = require("./routes/user");
+const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode } = require("./routes/user");
 const { getQuestionsForLevel, getQuestionsForArena, deleteQuestion, createQuestion, updateQuestion, deleteQuestionsInArena } = require("./routes/question");
 const USER_URI = "/api/user"
 const QUESTION_URI = "/api/question"
@@ -49,6 +49,7 @@ app.put(`${USER_URI}/email/:id`, verifyEmail);
 app.use(verifyToken);
 
 //Protected User Resource
+app.put(`${USER_URI}/resendcode`, resendEmailVerificationCode);
 app.put(`${USER_URI}/:id`, updateUser);
 app.put(`${USER_URI}/gamedata/:id`, updateUserGameData);
 app.put(`${USER_URI}/payment/:id`, updateUserPaymentStatus);
@@ -59,7 +60,7 @@ app.get(`${USER_URI}/:id`, getUser);
 
 //Protected Question Resource
 app.get(`${QUESTION_URI}/:arena`, getQuestionsForArena);
-app.post(QUESTION_URI, createQuestion)
+app.post(QUESTION_URI, createQuestion);
 app.get(`${QUESTION_URI}/:arena/:level`, getQuestionsForLevel);
 app.delete(`${QUESTION_URI}/:arena`, deleteQuestionsInArena);
 app.delete(`${QUESTION_URI}/:id`, deleteQuestion);

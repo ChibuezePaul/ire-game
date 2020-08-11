@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { SECRET_KEY } = require("../core/config.js");
-const { sendErrorMessage, sendSuccessMessage, filterUerInfo, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError } = require("../core/utils");
+const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError } = require("../core/utils");
 
 exports.signup = (req, res) => {
   if (!req.body) {
@@ -44,7 +44,7 @@ exports.signup = (req, res) => {
           return res.status(400).json(sendErrorMessage(error));
         }
         sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(newUser)));
+        return res.status(200).json(sendSuccessMessage(filterUserInfo(newUser)));
       });
     });
   });
@@ -58,7 +58,12 @@ exports.login = (req, res) => {
   }
 
   User.findOne({ username: username, delFlag: "N" }, function (error, user) {
-    if (error) { return res.status(400).json(sendErrorMessage(error, 400)); }
+    if (error) {
+      if (isUserNotFoundError(error)) {
+        return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+      }
+      return res.status(400).json(sendErrorMessage(error, 400));
+    }
     if (!user) {
       return res.status(404).json(sendErrorMessage(`User not found with username: ${username}`, 404));
     }
@@ -70,7 +75,7 @@ exports.login = (req, res) => {
         return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
       jwt.sign({ user }, SECRET_KEY, (error, token) => {
-        return res.status(200).json([{ User: filterUerInfo(user) },sendSuccessMessage("Bearer " + token)]);
+        return res.status(200).json([{ User: filterUserInfo(user) },sendSuccessMessage("Bearer " + token)]);
       })
     });
   }).collation({ locale: 'en', strength: 1 });
@@ -85,13 +90,16 @@ exports.getUser = (req, res, next) => {
     const id = req.params.id;
     User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
       if (error) {
+        if (isUserNotFoundError(error)) {
+          return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+        }
         console.error(`Error occured fetching user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
         return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
-      return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+      return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
     });
   });
 }
@@ -129,7 +137,7 @@ exports.updateUser = (req, res, next) => {
         if (!user) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
   });
@@ -168,7 +176,7 @@ exports.updateUserGameData = (req, res, next) => {
         if (!user) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
   });
@@ -203,7 +211,7 @@ exports.deleteUser = (req, res, next) => {
         if (!user) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
   });
@@ -223,7 +231,7 @@ exports.getUsers = (req, res, next) => {
       if (users.length === 0) {
         return res.status(404).json(sendErrorMessage("No user found in database", 404));
       }
-      return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
+      return res.status(200).json(sendSuccessMessage(users.map(user => filterUserInfo(user))));
     });
   });
 }
@@ -253,7 +261,7 @@ exports.verifyEmail = (req, res, next) => {
         return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
       jwt.sign({ user }, SECRET_KEY, (error, token) => {
-        return res.status(200).json([{ User: filterUerInfo(user) }, sendSuccessMessage("Bearer " + token)]);
+        return res.status(200).json([{ User: filterUserInfo(user) }, sendSuccessMessage("Bearer " + token)]);
       })
     }
   );
@@ -273,7 +281,7 @@ exports.getUsersRanking = (req, res, next) => {
       if (users.length === 0) {
         return res.status(404).json(sendErrorMessage("No user found in database", 404));
       }
-      return res.status(200).json(sendSuccessMessage(users.map(user => filterUerInfo(user))));
+      return res.status(200).json(sendSuccessMessage(users.map(user => filterUserInfoForRanking(user))));
     })
       .sort({ 'gameData.totalCoins': -1 })
       .limit(10);
@@ -309,8 +317,21 @@ exports.updateUserPaymentStatus = (req, res, next) => {
         if (!user) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        return res.status(200).json(sendSuccessMessage(filterUerInfo(user)));
+        return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
+  });
+}
+
+exports.resendEmailVerificationCode =  (req, res, next) => {
+  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
+    if (error) {
+      console.error(`token verification error: ${error}`);
+      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
+    }
+    const { email, emailVerificationCode } = req.body;
+    sendEmailVerificationMail(email, emailVerificationCode)
+      .then(resp => res.status(200).json(sendSuccessMessage(`Email Sent Successfully to ${email}`)))
+      .catch(err => res.status(400).json(sendErrorMessage(`Error Occured Sending Email to ${email}. Error: ${err}`)))
   });
 }
