@@ -42,7 +42,7 @@ exports.filterUserInfo = (user) => {
   });
 }
 
-exports.filterUserInfoForRank = (user) => {
+exports.filterUserInfoForRanking = (user) => {
   return user.toObject({
     versionKey: false,
     transform: (doc, ret, options) => {

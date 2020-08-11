@@ -332,6 +332,6 @@ exports.resendEmailVerificationCode =  (req, res, next) => {
     const { email, emailVerificationCode } = req.body;
     sendEmailVerificationMail(email, emailVerificationCode)
       .then(resp => res.status(200).json(sendSuccessMessage(`Email Sent Successfully to ${email}`)))
-      .catch(err => res.status(400).json(sendErrorMessage(`Error Occured Sending Email to ${email}. Error: ${err}`)))
+      .catch(err => res.status(400).json(sendErrorMessage(`Error Occured Sending Email to ${email}. ${err}`)))
   });
 }
