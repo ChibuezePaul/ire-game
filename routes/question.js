@@ -3,17 +3,18 @@ const Question = require("../models/Question");
 let questions = process.env.QUESTIONS || require("../questions/arenaLagosQuestions.json");
 const { sendErrorMessage, sendSuccessMessage, filterQuestionInfo } = require("../core/utils");
 const { SECRET_KEY } = require("../core/config.js");
+const { logger } = require("../core/logger.js");
 
 exports.getQuestionsForArena = (req, res) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const arena = req.params.arena;
     Question.find({ delFlag: "N", arena: arena }, (error, questions) => {
       if (error) {
-        console.error(`Error occurred fetching questions: ${error}`);
+        logger.error(`Error occurred fetching questions: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       else if (questions.length === 0) {
@@ -27,13 +28,13 @@ exports.getQuestionsForArena = (req, res) => {
 exports.getQuestionsForLevel = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { arena, level } = req.params;
     Question.find({ delFlag: "N", arena: arena, level: level }, (error, questions) => {
       if (error) {
-        console.error(`Error occurred fetching questions with arena ${arena}, level ${level}: ${error}`);
+        logger.error(`Error occurred fetching questions with arena ${arena}, level ${level}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!questions) {
@@ -50,7 +51,7 @@ exports.getQuestionsForLevel = (req, res, next) => {
 exports.deleteQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
@@ -67,7 +68,7 @@ exports.deleteQuestion = (req, res, next) => {
       },
       (error, question) => {
         if (error) {
-          console.error(`Error occurred fetching question with id ${id}: ${error}`);
+          logger.error(`Error occurred fetching question with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!question) {
@@ -82,14 +83,14 @@ exports.deleteQuestion = (req, res, next) => {
 exports.deleteQuestionsInArena = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const arena = req.params.arena;
     Question.deleteMany({ arena: arena },
       (error, questions) => {
         if (error) {
-          console.error(`Error occurred deleting questions in arena ${arena}: ${error}`);
+          logger.error(`Error occurred deleting questions in arena ${arena}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         return res.status(200).json(sendSuccessMessage(`${questions.deletedCount} question(s) deleted`));
@@ -101,7 +102,7 @@ exports.deleteQuestionsInArena = (req, res, next) => {
 exports.createQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const API_KEY = req.headers["x-api-key"];
@@ -119,10 +120,10 @@ exports.createQuestion = (req, res, next) => {
     
     if (typeof questions === "string") {
       questions = JSON.parse(questions); 
-      console.log("questions parsed successfully") 
+      logger.info("questions parsed successfully") 
     }
 
-    console.log("questions length", questions.length);
+    logger.info("questions length", questions.length);
     let questionCount = 1;
     let level = 0;
 
@@ -160,12 +161,12 @@ exports.createQuestion = (req, res, next) => {
       const error = newQuestion.validateSync();
 
       if (error) {
-        console.error(`Bad Details sent for question : ${questionCount}`);
+        logger.error(`Bad Details sent for question : ${questionCount}`);
         return res.status(400).json(sendErrorMessage(error.message.replace("Question validation failed:", "").replace(".", ` at question ${questionCount}`).trim().split(",")));
       }
       newQuestion.save()
         .catch((error) => {
-          console.error(`Error occurred creating question: ${error}`)
+          logger.error(`Error occurred creating question: ${error}`)
         });
     }
     return res.status(201).json(sendSuccessMessage(`${questionCount - 1} questions added`, 201));
@@ -175,7 +176,7 @@ exports.createQuestion = (req, res, next) => {
 exports.updateQuestion = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { yoruba, english, options } = req.body;
@@ -193,7 +194,7 @@ exports.updateQuestion = (req, res, next) => {
       },
       (error, question) => {
         if (error) {
-          console.error(`Error occurred fetching question with id ${id}: ${error}`);
+          logger.error(`Error occurred fetching question with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!question) {

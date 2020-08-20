@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const morgan = require("morgan");
+const { logger } = require("./core/logger.js");
 
 //App init
 const app = express();
@@ -21,6 +22,12 @@ app.options("*",(req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, 'public/doc')));
 app.use(morgan("dev"));
+app.use((req, res, next) => {
+  res.on('finish', function () {
+    logger.info(`${req.method} request received on ${req.url} with code ${this.statusCode}`);
+  })
+  next();
+});
 const { verifyToken } = require("./core/utils");
 
 //Routes
@@ -38,7 +45,6 @@ app.all('/*', function (req, res, next) {
 
 //Documentation Page
 app.get("/", (req, res) => res.render("index"));
-app.get("/test", (req, res) => res.send("build 1.3"));
 
 //Unprotected User Resource
 app.post(`${USER_URI}/signup`, signup);
@@ -67,4 +73,4 @@ app.delete(`${QUESTION_URI}/:id`, deleteQuestion);
 app.put(`${QUESTION_URI}/:id`, updateQuestion);
 
 //Server Startup
-app.listen(PORT, console.log(`IRE Game Server Started On Port ${PORT}...`));
+app.listen(PORT, logger.info(`IRE Game Server Started On Port ${PORT}...`));

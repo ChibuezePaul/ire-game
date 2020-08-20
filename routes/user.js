@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { SECRET_KEY } = require("../core/config.js");
+const { logger } = require("../core/logger.js");
 const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError } = require("../core/utils");
 
 exports.signup = (req, res) => {
@@ -28,19 +29,19 @@ exports.signup = (req, res) => {
   const error = newUser.validateSync();
 
   if (error) {
-    console.error(`Bad Details sent for user with username: ${username}`);
+    logger.error(`Bad Details sent for user with username: ${username}`);
     return res.status(400).json(sendErrorMessage(error.message.replace("User validation failed:", "").trim().split(",")));
   }
   bcrypt.genSalt(10, (error, salt) => {
     bcrypt.hash(password, salt, (error, hash) => {
       if (error) {
-        console.error(`Error occurred hashing password for new user with email: ${email}`);
+        logger.error(`Error occurred hashing password for new user with email: ${email}`);
         return res.status(400).json(sendErrorMessage(error));
       }
       newUser.password = hash;
       newUser.save(error => {
         if (error) {
-          console.error(`Error occurred saving new user with email ${email}: ${error}`);
+          logger.error(`Error occurred saving new user with email ${email}: ${error}`);
           return res.status(400).json(sendErrorMessage(error));
         }
         sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
@@ -84,7 +85,7 @@ exports.login = (req, res) => {
 exports.getUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
@@ -93,7 +94,7 @@ exports.getUser = (req, res, next) => {
         if (isUserNotFoundError(error)) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        console.error(`Error occured fetching user with id ${id}: ${error}`);
+        logger.error(`Error occured fetching user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
@@ -107,7 +108,7 @@ exports.getUser = (req, res, next) => {
 exports.updateUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { username, email, phone, location, avatarId } = req.body;
@@ -131,7 +132,7 @@ exports.updateUser = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          console.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -146,7 +147,7 @@ exports.updateUser = (req, res, next) => {
 exports.updateUserGameData = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { gameData } = req.body;
@@ -170,7 +171,7 @@ exports.updateUserGameData = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          console.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -185,7 +186,7 @@ exports.updateUserGameData = (req, res, next) => {
 exports.deleteUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
@@ -205,7 +206,7 @@ exports.deleteUser = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          console.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -220,12 +221,12 @@ exports.deleteUser = (req, res, next) => {
 exports.getUsers = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     User.find({ delFlag: "N" }, (error, users) => {
       if (error) {
-        console.error(`Error occurred fetching users: ${error}`);
+        logger.error(`Error occurred fetching users: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (users.length === 0) {
@@ -254,7 +255,7 @@ exports.verifyEmail = (req, res, next) => {
         if (isUserNotFoundError(error)) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        console.error(`Error occured veryfying email for user with id ${id}: ${error}`);
+        logger.error(`Error occured veryfying email for user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
@@ -270,12 +271,12 @@ exports.verifyEmail = (req, res, next) => {
 exports.getUsersRanking = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     User.find({ delFlag: "N",  }, (error, users) => {
       if (error) {
-        console.error(`Error occurred fetching users: ${error}`);
+        logger.error(`Error occurred fetching users: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (users.length === 0) {
@@ -291,7 +292,7 @@ exports.getUsersRanking = (req, res, next) => {
 exports.updateUserPaymentStatus = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const id = req.params.id;
@@ -311,7 +312,7 @@ exports.updateUserPaymentStatus = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          console.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occured fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -326,7 +327,7 @@ exports.updateUserPaymentStatus = (req, res, next) => {
 exports.resendEmailVerificationCode =  (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
-      console.error(`token verification error: ${error}`);
+      logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
     const { email, emailVerificationCode } = req.body;
