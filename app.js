@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan("dev"));
 app.use((req, res, next) => {
   res.on('finish', function () {
-    logger.info(`${req.method} request received on ${req.url} with code ${this.statusCode}`);
+    logger.info(`${req.method} request received on ${Date()} ${req.url} ${this.statusCode}`);
   })
   next();
 });
