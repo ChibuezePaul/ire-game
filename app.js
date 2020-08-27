@@ -20,7 +20,7 @@ app.options("*",(req, res, next) => {
     res.writeHead(200, headers);
     res.send();
 });
-app.use(express.static(path.join(__dirname, 'public/doc')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan("dev"));
 app.use((req, res, next) => {
   res.on('finish', function () {
@@ -42,9 +42,6 @@ app.all('/*', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Headers', 'content-Type,x-requested-with');
   next();
 });
-
-//Documentation Page
-app.get("/", (req, res) => res.render("index"));
 
 //Unprotected User Resource
 app.post(`${USER_URI}/signup`, signup);

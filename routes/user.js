@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { SECRET_KEY } = require("../core/config.js");
 const { logger } = require("../core/logger.js");
-const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError } = require("../core/utils");
+const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError, sendEmailAndUsernameToMailChimp } = require("../core/utils");
 
 exports.signup = (req, res) => {
   if (!req.body) {
@@ -45,6 +45,7 @@ exports.signup = (req, res) => {
           return res.status(400).json(sendErrorMessage(error));
         }
         sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
+        sendEmailAndUsernameToMailChimp(newUser.email, newUser.username);
         return res.status(200).json(sendSuccessMessage(filterUserInfo(newUser)));
       });
     });

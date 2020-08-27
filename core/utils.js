@@ -1,10 +1,13 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer'); 
+const fetch = require('node-fetch')
 const {
   EMAIL_SERVICE,
   SENDER_NAME,
   SENDER_EMAIL,
   SENDER_PASSWORD,
-  SUBJECT
+  SUBJECT,
+  MAIL_CHIMP_URL,
+  MAIL_CHIMP_API_KEY
 } = require("./config.js");
 
 const transporter = nodemailer.createTransport({
@@ -101,4 +104,28 @@ function emailVerificationText(emailVerificationCode) {
     <p>You have successfully downloaded IRE game, your Unique code is: <b style="color:green">${emailVerificationCode}</b>.
     <p>Unique code is confidential, please do not share with anyone.</p>
     <p>Thank You,<br>Team Ire.</p>`;
+}
+
+exports.sendEmailAndUsernameToMailChimp = (email, username) => {
+  fetch(MAIL_CHIMP_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `auth ${MAIL_CHIMP_API_KEY}`
+    },
+    body: JSON.stringify({
+      "members": [
+        {
+          "email_address": email,
+          "merge_fields": {
+            "FNAME": username
+          },
+          "status": "subscribed"
+        }
+      ]
+    })
+  }).then((response) => {
+    console.log("subscription successful");
+  }, (error) => {
+    console.error(`error occeured subscribing email ${email}: ${error}`);
+  });
 }
