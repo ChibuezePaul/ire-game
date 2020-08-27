@@ -106,7 +106,7 @@ function emailVerificationText(emailVerificationCode) {
     <p>Thank You,<br>Team Ire.</p>`;
 }
 
-exports.sendEmailAndUsernameToMailChimp = (email, username) => {
+exports.sendEmailAndUsernameToMailChimp = (email, username, phone) => {
   fetch(MAIL_CHIMP_URL, {
     method: 'POST',
     headers: {
@@ -117,7 +117,8 @@ exports.sendEmailAndUsernameToMailChimp = (email, username) => {
         {
           "email_address": email,
           "merge_fields": {
-            "FNAME": username
+            "FNAME": username,
+            "PHONE": phone
           },
           "status": "subscribed"
         }

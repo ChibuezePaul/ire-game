@@ -45,7 +45,7 @@ exports.signup = (req, res) => {
           return res.status(400).json(sendErrorMessage(error));
         }
         sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
-        sendEmailAndUsernameToMailChimp(newUser.email, newUser.username);
+        sendEmailAndUsernameToMailChimp(newUser.email, newUser.username, newUser.phone);
         return res.status(200).json(sendSuccessMessage(filterUserInfo(newUser)));
       });
     });
