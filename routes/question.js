@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Question = require("../models/Question");
-let questions = process.env.QUESTIONS || require("../questions/arenaLagosQuestions.json");
+
 const { sendErrorMessage, sendSuccessMessage, filterQuestionInfo } = require("../core/utils");
 const { SECRET_KEY } = require("../core/config.js");
 const { logger } = require("../core/logger.js");
@@ -117,59 +117,69 @@ exports.createQuestion = (req, res, next) => {
     if (!req.body || !arena) {
       return res.status(400).json(sendErrorMessage("Missing body parameter", 400));
     }
+    let questions;
+    if (arena == "Lagos" || arena == "lagos") {
+      questions = process.env.QUESTIONS || require("../questions/arenaLagosQuestions.json");
+    } else if (arena == "Abeokuta" || arena == "abeokuta") {
+      questions = process.env.QUESTIONS || require("../questions/arenaAbeokutaQuestions.json");
+    } else if (arena == "Ibadan" || arena == "ibadan") {
+      questions = process.env.QUESTIONS || require("../questions/arenaIbadanQuestions.json");
+    }
     
     if (typeof questions === "string") {
       questions = JSON.parse(questions); 
       logger.info("questions parsed successfully") 
     }
+    if (questions) {
+      logger.info(`questions length: ${questions.length}`);
+      let questionCount = 1;
+      let level = 0;
 
-    logger.info("questions length", questions.length);
-    let questionCount = 1;
-    let level = 0;
-
-    for (let i = 0; i < questions.length; i++) {
-      let question = questions[i];
-      if (question[0].indexOf("LEVEL") !== -1) {
-        level++;
-        continue;
-      }
-      const newQuestion = new Question({
-        arena: arena,
-        level: level,
-        yoruba: question[0],
-        english: question[1],
-        options: {
-          option1: {
-            yoruba: question[2],
-            english: question[3],
-          },
-          option2: {
-            yoruba: question[4],
-            english: question[5],
-          },
-          option3: {
-            yoruba: question[6],
-            english: question[7],
-          },
-          option4: {
-            yoruba: question[8],
-            english: question[9],
-          },
+      for (let i = 0; i < questions.length; i++) {
+        let question = questions[i];
+        if (question[0].indexOf("LEVEL") !== -1) {
+          level++;
+          continue;
         }
-      });
-      questionCount++;
-      const error = newQuestion.validateSync();
-
-      if (error) {
-        logger.error(`Bad Details sent for question : ${questionCount}`);
-        return res.status(400).json(sendErrorMessage(error.message.replace("Question validation failed:", "").replace(".", ` at question ${questionCount}`).trim().split(",")));
-      }
-      newQuestion.save()
-        .catch((error) => {
-          logger.error(`Error occurred creating question: ${error}`)
+        const newQuestion = new Question({
+          arena: arena,
+          level: level,
+          yoruba: question[0],
+          english: question[1],
+          options: {
+            option1: {
+              yoruba: question[2],
+              english: question[3],
+            },
+            option2: {
+              yoruba: question[4],
+              english: question[5],
+            },
+            option3: {
+              yoruba: question[6],
+              english: question[7],
+            },
+            option4: {
+              yoruba: question[8],
+              english: question[9],
+            },
+          }
         });
+        questionCount++;
+        const error = newQuestion.validateSync();
+
+        if (error) {
+          logger.error(`Bad Details sent for question : ${questionCount}`);
+          return res.status(400).json(sendErrorMessage(error.message.replace("Question validation failed:", "").replace(".", ` at question ${questionCount}`).trim().split(",")));
+        }
+        newQuestion.save()
+          .catch((error) => {
+            logger.error(`Error occurred creating question: ${error}`)
+          });
+      }
+      return res.status(201).json(sendSuccessMessage(`${questionCount - 1} questions added`, 201));
     }
-    return res.status(201).json(sendSuccessMessage(`${questionCount - 1} questions added`, 201));
+    return res.status(400).json(sendErrorMessage("Invalid Arena. Valid Arenas[Lagos, Ibadan, Abeokuta]"));
   });
 }
 
