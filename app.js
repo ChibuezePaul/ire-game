@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 const { verifyToken } = require("./core/utils");
 
 //Routes
-const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode } = require("./routes/user");
+const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode, resetPassword, getUserWithEmail } = require("./routes/user");
 const { getQuestionsForLevel, getQuestionsForArena, deleteQuestion, createQuestion, updateQuestion, deleteQuestionsInArena } = require("./routes/question");
 const USER_URI = "/api/user"
 const QUESTION_URI = "/api/question"
@@ -47,6 +47,8 @@ app.all('/*', function (req, res, next) {
 app.post(`${USER_URI}/signup`, signup);
 app.post(`${USER_URI}/login`, login);
 app.put(`${USER_URI}/email/:id`, verifyEmail);
+app.put(`${USER_URI}/resetPassword`, resetPassword);
+app.get(`${USER_URI}/:email`, getUserWithEmail);
 
 //Token Middleware
 app.use(verifyToken);

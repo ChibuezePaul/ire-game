@@ -337,3 +337,61 @@ exports.resendEmailVerificationCode =  (req, res, next) => {
       .catch(err => res.status(400).json(sendErrorMessage(`Error Occured Sending Email to ${email}. ${err}`)))
   });
 }
+
+exports.resetPassword = (req, res, next) => {
+ 
+  const { id, password } = req.body;
+  if (!id || !password) {
+    return res.status(400).json(sendErrorMessage("Missing body parameters"));
+  }
+  bcrypt.genSalt(10, (error, salt) => {
+    bcrypt.hash(password, salt, (error, hash) => {
+      if (error) {
+        logger.error(`Error occurred hashing password for user with id: ${id}`);
+        return res.status(400).json(sendErrorMessage(error));
+      }
+      User.findOneAndUpdate(
+        { _id: id, delFlag: "N" },
+        {
+          $set: {
+            password : hash
+          }
+        },
+        {
+          new: true,
+          useFindAndModify: false
+        },
+        (error, user) => {
+          if (error) {
+            if (isUserNotFoundError(error)) {
+              return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+            }
+            logger.error(`Error occurred resetting user password with id ${id}: ${error}`);
+            return res.status(400).json(sendErrorMessage(error, 400));
+          }
+          if (!user) {
+            return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+          }
+          return res.status(200).json(sendSuccessMessage('Password Reset Success'));
+        }
+      );
+    });
+  });
+}
+
+exports.getUserWithEmail = (req, res, next) => {
+  const email = req.params.email;
+  User.findOne({ email: email, delFlag: "N" }, (error, user) => {
+    if (error) {
+      if (isUserNotFoundError(error)) {
+        return res.status(404).json(sendErrorMessage(`User not found with email: ${email}`, 404));
+      }
+      logger.error(`Error occured fetching user with email ${email}: ${error}`);
+      return res.status(400).json(sendErrorMessage(error, 400));
+    }
+    if (!user) {
+      return res.status(404).json(sendErrorMessage(`User not found with email: ${email}`, 404));
+    }
+    return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
+  });
+}
