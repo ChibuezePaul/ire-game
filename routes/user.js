@@ -5,13 +5,13 @@ const { SECRET_KEY } = require("../core/config.js");
 const { logger } = require("../core/logger.js");
 const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError, sendEmailAndUsernameToMailChimp } = require("../core/utils");
 
-exports.signup = (req, res) => {
+const signup = (req, res) => {
   if (!req.body) {
     return res.status(400).json(sendErrorMessage("Missing User Details"));
   }
   const { username, password, email, phone, gender, location, avatarId } = req.body;
 
-  if (!username || !password || !email || !gender || !location ) {
+  if (!username || !password || !email || !gender || !location) {
     return res.status(400).json(sendErrorMessage("Missing body parameters"));
   }
 
@@ -44,15 +44,15 @@ exports.signup = (req, res) => {
           logger.error(`Error occurred saving new user with email ${email}: ${error}`);
           return res.status(400).json(sendErrorMessage(error));
         }
-        sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
-        sendEmailAndUsernameToMailChimp(newUser.email, newUser.username, newUser.phone);
+        // sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
+        // sendEmailAndUsernameToMailChimp(newUser.email, newUser.username, newUser.phone);
         return res.status(200).json(sendSuccessMessage(filterUserInfo(newUser)));
       });
     });
   });
 }
 
-exports.login = (req, res) => {
+const login = (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   if (!username || !password) {
@@ -77,13 +77,13 @@ exports.login = (req, res) => {
         return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
       jwt.sign({ user }, SECRET_KEY, (error, token) => {
-        return res.status(200).json([{ User: filterUserInfo(user) },sendSuccessMessage("Bearer " + token)]);
+        return res.status(200).json([{ User: filterUserInfo(user) }, sendSuccessMessage("Bearer " + token)]);
       })
     });
   }).collation({ locale: 'en', strength: 1 });
 }
 
-exports.getUser = (req, res, next) => {
+const getUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -106,7 +106,7 @@ exports.getUser = (req, res, next) => {
   });
 }
 
-exports.updateUser = (req, res, next) => {
+const updateUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -145,7 +145,7 @@ exports.updateUser = (req, res, next) => {
   });
 }
 
-exports.updateUserGameData = (req, res, next) => {
+const updateUserGameData = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -184,7 +184,7 @@ exports.updateUserGameData = (req, res, next) => {
   });
 }
 
-exports.deleteUser = (req, res, next) => {
+const deleteUser = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -219,7 +219,7 @@ exports.deleteUser = (req, res, next) => {
   });
 }
 
-exports.getUsers = (req, res, next) => {
+const getUsers = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -238,7 +238,7 @@ exports.getUsers = (req, res, next) => {
   });
 }
 
-exports.verifyEmail = (req, res, next) => {
+const verifyEmail = (req, res, next) => {
   const id = req.params.id;
   User.findOneAndUpdate(
     { _id: id, delFlag: "N" },
@@ -269,13 +269,13 @@ exports.verifyEmail = (req, res, next) => {
   );
 }
 
-exports.getUsersRanking = (req, res, next) => {
+const getUsersRanking = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
-    User.find({ delFlag: "N",  }, (error, users) => {
+    User.find({ delFlag: "N", }, (error, users) => {
       if (error) {
         logger.error(`Error occurred fetching users: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
@@ -290,7 +290,7 @@ exports.getUsersRanking = (req, res, next) => {
   });
 }
 
-exports.updateUserPaymentStatus = (req, res, next) => {
+const updateUserPaymentStatus = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -325,7 +325,7 @@ exports.updateUserPaymentStatus = (req, res, next) => {
   });
 }
 
-exports.resendEmailVerificationCode =  (req, res, next) => {
+const resendEmailVerificationCode = (req, res, next) => {
   jwt.verify(req.token, SECRET_KEY, (error, authData) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
@@ -338,8 +338,8 @@ exports.resendEmailVerificationCode =  (req, res, next) => {
   });
 }
 
-exports.resetPassword = (req, res, next) => {
- 
+const resetPassword = (req, res, next) => {
+
   const { id, password } = req.body;
   if (!id || !password) {
     return res.status(400).json(sendErrorMessage("Missing body parameters"));
@@ -354,7 +354,7 @@ exports.resetPassword = (req, res, next) => {
         { _id: id, delFlag: "N" },
         {
           $set: {
-            password : hash
+            password: hash
           }
         },
         {
@@ -379,7 +379,7 @@ exports.resetPassword = (req, res, next) => {
   });
 }
 
-exports.getUserWithEmail = (req, res, next) => {
+const getUserWithEmail = (req, res, next) => {
   const email = req.params.email;
   User.findOne({ email: email, delFlag: "N" }, (error, user) => {
     if (error) {
@@ -394,4 +394,44 @@ exports.getUserWithEmail = (req, res, next) => {
     }
     return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
   });
+}
+
+const verifyReferralCode = async (req, res, next) => {
+
+  const referralCode = req.params.referralCode;
+  const email = req.params.email;
+  User.findOne({ email: referralCode, delFlag: "N" }, (error, user) => {
+    if (error) {
+      if (isUserNotFoundError(error)) {
+        return res.status(404).json(sendErrorMessage(`Invalid Referral Code ${referralCode} Supplied`, 404));
+      }
+      logger.error(`Error occured fetching user with email ${email}: ${error}`);
+      return res.status(400).json(sendErrorMessage(error, 400));
+    }
+    if (!user) {
+      return res.status(400).json(sendErrorMessage(`Invalid Referral Code ${referralCode} Supplied`, 400));
+    }
+    const referedUsersEmail = user.referedUsers.map(userDetails => Object.values(userDetails)).join();
+    let isNewReferral = false;
+    if(!referedUsersEmail.includes(email)){
+      user.referedUsers.push({referredUser: email, dateReferred: new Date()});
+      isNewReferral = true;
+    }
+
+    user.save(error => {
+      if (error) {
+        logger.error(`Error occurred updating user's referral details with email ${email}: ${error}`);
+        return res.status(400).json(sendErrorMessage(`Error Validating Referral Code ${referralCode} Supplied`, 500));
+      }
+      if (isNewReferral) {
+        return res.status(200).json(sendSuccessMessage('Referral Code Applied Successfully'));  
+      } else {
+        return res.status(400).json(sendErrorMessage('Referral Code Already Applied')); 
+      }
+    });
+  });
+}
+
+module.exports = {
+  signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode, resetPassword, getUserWithEmail, verifyReferralCode
 }

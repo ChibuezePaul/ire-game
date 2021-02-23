@@ -9,5 +9,6 @@ module.exports = {
   SENDER_PASSWORD: process.env.SENDER_PASSWORD,
   SUBJECT: process.env.SUBJECT,
   MAIL_CHIMP_URL: process.env.MAIL_CHIMP_URL,
-  MAIL_CHIMP_API_KEY: process.env.MAIL_CHIMP_API_KEY
+  MAIL_CHIMP_API_KEY: process.env.MAIL_CHIMP_API_KEY,
+  ARENAS: process.env.ARENAS
 };

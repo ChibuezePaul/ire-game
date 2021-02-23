@@ -31,10 +31,15 @@ app.use((req, res, next) => {
 const { verifyToken } = require("./core/utils");
 
 //Routes
-const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode, resetPassword, getUserWithEmail } = require("./routes/user");
+const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode, resetPassword, getUserWithEmail, verifyReferralCode } = require("./routes/user");
 const { getQuestionsForLevel, getQuestionsForArena, deleteQuestion, createQuestion, updateQuestion, deleteQuestionsInArena } = require("./routes/question");
+const { createSetting, updateSetting } = require("./routes/setting");
+const { createEarning, updateEarning } = require("./routes/earning");
+
 const USER_URI = "/api/user"
 const QUESTION_URI = "/api/question"
+const SETTING_URI = "/api/setting"
+const EARNING_URI = "/api/earning"
 
 app.all('/*', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -49,6 +54,8 @@ app.post(`${USER_URI}/login`, login);
 app.put(`${USER_URI}/email/:id`, verifyEmail);
 app.put(`${USER_URI}/resetPassword`, resetPassword);
 app.get(`${USER_URI}/:email`, getUserWithEmail);
+app.get(`${USER_URI}/verifyReferralCode/:referralCode/:email`, verifyReferralCode);
+
 
 //Token Middleware
 app.use(verifyToken);
@@ -70,6 +77,15 @@ app.get(`${QUESTION_URI}/:arena/:level`, getQuestionsForLevel);
 app.delete(`${QUESTION_URI}/:arena`, deleteQuestionsInArena);
 app.delete(`${QUESTION_URI}/:id`, deleteQuestion);
 app.put(`${QUESTION_URI}/:id`, updateQuestion);
+
+
+//Protected Setting Resource
+app.post(SETTING_URI, createSetting);
+app.put(SETTING_URI, updateSetting);
+
+//Protected Earning Resource
+app.get(`${EARNING_URI}/:userId`, createEarning);
+app.put(`${EARNING_URI}/:id`, updateEarning);
 
 //Server Startup
 app.listen(PORT, logger.info(`IRE Game Server Started On Port ${PORT}...`));

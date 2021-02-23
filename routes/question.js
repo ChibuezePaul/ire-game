@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const Question = require("../models/Question");
 
 const { sendErrorMessage, sendSuccessMessage, filterQuestionInfo } = require("../core/utils");
-const { SECRET_KEY } = require("../core/config.js");
+const { SECRET_KEY, ARENAS } = require("../core/config.js");
 const { logger } = require("../core/logger.js");
 
 exports.getQuestionsForArena = (req, res) => {
@@ -86,6 +86,14 @@ exports.deleteQuestionsInArena = (req, res, next) => {
       logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
     }
+    const API_KEY = req.headers["x-api-key"];
+    if (!API_KEY) {
+      return res.status(401).json(sendErrorMessage("Unauthorized User", 401));
+    }
+
+    if (API_KEY !== SECRET_KEY) {
+      return res.status(401).json(sendErrorMessage("Unauthorized User. Invalid Api-Key", 401));
+    }
     const arena = req.params.arena;
     Question.deleteMany({ arena: arena },
       (error, questions) => {
@@ -118,14 +126,10 @@ exports.createQuestion = (req, res, next) => {
       return res.status(400).json(sendErrorMessage("Missing body parameter", 400));
     }
     let questions;
-    if (arena == "Lagos" || arena == "lagos") {
-      questions = process.env.QUESTIONS || require("../questions/arenaLagosQuestions.json");
-    } else if (arena == "Abeokuta" || arena == "abeokuta") {
-      questions = process.env.QUESTIONS || require("../questions/arenaAbeokutaQuestions.json");
-    } else if (arena == "Ibadan" || arena == "ibadan") {
-      questions = process.env.QUESTIONS || require("../questions/arenaIbadanQuestions.json");
-    }
-    
+    const selectedArena = JSON.parse(ARENAS[arena]);
+
+    questions = process.env.QUESTIONS || require(`../questions/arena${selectedArena}Questions.json`);
+
     if (typeof questions === "string") {
       questions = JSON.parse(questions); 
       logger.info("questions parsed successfully") 
@@ -188,6 +192,14 @@ exports.updateQuestion = (req, res, next) => {
     if (error) {
       logger.error(`token verification error: ${error}`);
       return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
+    }
+    const API_KEY = req.headers["x-api-key"];
+    if (!API_KEY) {
+      return res.status(401).json(sendErrorMessage("Unauthorized User", 401));
+    }
+
+    if (API_KEY !== SECRET_KEY) {
+      return res.status(401).json(sendErrorMessage("Unauthorized User. Invalid Api-Key", 401));
     }
     const { yoruba, english, options } = req.body;
     const id = req.params.id;

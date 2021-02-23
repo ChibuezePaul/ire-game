@@ -130,3 +130,10 @@ exports.sendEmailAndUsernameToMailChimp = (email, username, phone) => {
     console.error(`error occeured subscribing email ${email}: ${error}`);
   });
 }
+
+exports.isDateWithinCurrentMonth = (date) => {
+  const my_date = new Date();
+  const first_date = new Date(my_date.getFullYear(), my_date.getMonth(), 2);
+  const last_date = new Date(my_date.getFullYear(), my_date.getMonth() + 1, 1);
+  return date.getTime() >= first_date.getTime() && date.getTime() <= last_date.getTime();
+};

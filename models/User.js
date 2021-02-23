@@ -115,7 +115,9 @@ const userSchema = mongoose.Schema({
       }
     }
   },
-  emailVerificationCode: Number
+  emailVerificationCode: Number,
+  referedUsers: Array,
+  earnings: Array
 },
 {
   strictQuery: 'throw'
