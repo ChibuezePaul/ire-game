@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { DB_URL } = require("./config.js");
+const { SETTINGS_COUNT } = require("./config.js");
 const { logger } = require("./logger.js");
 const Setting = require("../models/Setting");
 
@@ -12,7 +13,7 @@ mongoose.connection.on('connected', (con => {
     if(error) {
       logger.error(`Error occurred getting count of records in settings db: ${error}`);
     }
-    if(count == 0){
+    if(count < SETTINGS_COUNT){
       Setting.insertMany([
         {
           "name" : "referralThreshold",
@@ -25,6 +26,10 @@ mongoose.connection.on('connected', (con => {
         {
           "name" : "registrationFee",
           "value" : "1000"
+        },
+        {
+          "name" : "isReferralActive",
+          "value" : true
         }
       ], (error, settings) => {
         if(error) {
