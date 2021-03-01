@@ -33,7 +33,7 @@ exports.createEarning = (req, res, next) => {
             }
 
             const referralCount = user.referedUsers
-                .filter(referedUser => isDateWithinCurrentMonth(new Date(referedUser.dateReferred)))
+                .filter(referredUser => isDateWithinCurrentMonth(new Date(referredUser.dateReferred)))
                 .length;
             
             if(referralCount !== 0){                
