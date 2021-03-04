@@ -44,8 +44,8 @@ const signup = (req, res) => {
           logger.error(`Error occurred saving new user with email ${email}: ${error}`);
           return res.status(400).json(sendErrorMessage(error));
         }
-        // sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
-        // sendEmailAndUsernameToMailChimp(newUser.email, newUser.username, newUser.phone);
+        sendEmailVerificationMail(newUser.email, newUser.emailVerificationCode);
+        sendEmailAndUsernameToMailChimp(newUser.email, newUser.username, newUser.phone);
         return res.status(200).json(sendSuccessMessage(filterUserInfo(newUser)));
       });
     });
