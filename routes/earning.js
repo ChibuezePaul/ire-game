@@ -33,49 +33,54 @@ exports.createEarning = (req, res, next) => {
             }
 
             const referralCount = user.referedUsers
-                .filter(referedUser => isDateWithinCurrentMonth(new Date(referedUser.dateReferred)))
+                .filter(referredUser => isDateWithinCurrentMonth(new Date(referredUser.dateReferred)))
                 .length;
             
             if(referralCount !== 0){                
-                Setting.find({ name: { $in: ['referralThreshold', 'referralFee', 'registrationFee' ] } }, (error, settings) => {
+                Setting.find({ name: { $in: ['referralThreshold', 'referralFee', 'registrationFee', 'isReferralActive' ] } }, (error, settings) => {
                     if (error) {
                         logger.error(`Error occurred fetching settings: ${error}`);
                         return res.status(400).json(sendErrorMessage(error, 400));
                     }
                     if (settings.length === 0) {
-                        return res.status(404).json(sendErrorMessage("No settings found in database", 404));
+                        return res.status(500).json(sendErrorMessage("No settings found in database. Kindly Contact Administrator", 500));
                     }
 
-                    let referralThreshold, referralFee, registrationFee;
+                    let referralThreshold, referralFee, registrationFee, isReferralActive;
 
+                    isReferralActive = settings.find(setting => setting.name == 'isReferralActive')['value'];
                     referralThreshold = settings.find(setting => setting.name == 'referralThreshold')['value'];
                     referralFee = settings.find(setting => setting.name == 'referralFee')['value'];
                     registrationFee = settings.find(setting => setting.name == 'registrationFee')['value'];
-                    
-                    if(referralCount < referralThreshold){
-                        return res.status(400).json(sendSuccessMessage('Payment Request Failed! Monthly Threshold Not Met.', 400));
-                    }else{
-                        const newEarning = new Earning({
-                            amount: referralCount * registrationFee * referralFee,
-                            referralFee,
-                            referralCount,
-                            referralThreshold
-                        });
 
-                        newEarning.save(error => {
-                            if (error) {
-                                logger.error(`Error occurred creating earning: ${error}`)
-                                return res.status(400).json(sendErrorMessage(error));
-                            }
-                            user.earnings.push(newEarning);
-                            user.save(error => {
-                                if (error) {
-                                  logger.error(`Error occurred updating user's earning details with earning ${newEarning._id}: ${error}`);
-                                  return res.status(400).json(sendErrorMessage(`Error Completing  Payment Request`, 500));
-                                }
-                                return res.status(200).json(sendSuccessMessage('Payment Request Successful', 200));
+                    if(!isReferralActive) {
+                        return res.status(400).json(sendSuccessMessage('Referral Programme Has Ended.', 400));
+                    }else{
+                        if (referralCount < referralThreshold) {
+                            return res.status(400).json(sendSuccessMessage('Payment Request Failed! Monthly Threshold Not Met.', 400));
+                        } else {
+                            const newEarning = new Earning({
+                                amount: referralCount * registrationFee * referralFee,
+                                referralFee,
+                                referralCount,
+                                referralThreshold
                             });
-                        });
+
+                            newEarning.save(error => {
+                                if (error) {
+                                    logger.error(`Error occurred creating earning: ${error}`)
+                                    return res.status(400).json(sendErrorMessage(error));
+                                }
+                                user.earnings.push(newEarning);
+                                user.save(error => {
+                                    if (error) {
+                                        logger.error(`Error occurred updating user's earning details with earning ${newEarning._id}: ${error}`);
+                                        return res.status(400).json(sendErrorMessage(`Error Completing  Payment Request`, 500));
+                                    }
+                                    return res.status(200).json(sendSuccessMessage('Payment Request Successful', 200));
+                                });
+                            });
+                        }
                     }
                 });
             }else{

@@ -10,5 +10,6 @@ module.exports = {
   SUBJECT: process.env.SUBJECT,
   MAIL_CHIMP_URL: process.env.MAIL_CHIMP_URL,
   MAIL_CHIMP_API_KEY: process.env.MAIL_CHIMP_API_KEY,
-  ARENAS: process.env.ARENAS
+  ARENAS: process.env.ARENAS,
+  SETTINGS_COUNT: process.env.SETTINGS_COUNT || 4
 };
