@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { SECRET_KEY } = require("../core/config.js");
 const { logger } = require("../core/logger.js");
+const { verifyToken } = require("../core/utils");
 const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError, sendEmailAndUsernameToMailChimp } = require("../core/utils");
 
 const signup = (req, res) => {
@@ -84,11 +85,6 @@ const login = (req, res) => {
 }
 
 const getUser = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     const id = req.params.id;
     User.findOne({ _id: id, delFlag: "N" }, (error, user) => {
       if (error) {
@@ -103,15 +99,9 @@ const getUser = (req, res, next) => {
       }
       return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
     });
-  });
 }
 
 const updateUser = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     const { username, email, phone, location, avatarId } = req.body;
     if (!username || !email || !location || avatarId == null) {
       return res.status(400).json(sendErrorMessage("Missing body parameters"));
@@ -142,15 +132,9 @@ const updateUser = (req, res, next) => {
         return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
-  });
 }
 
 const updateUserGameData = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     const { gameData } = req.body;
     if (Object.keys(gameData).length < 3) {
       return res.status(400).json(sendErrorMessage("Missing body parameters"));
@@ -181,15 +165,9 @@ const updateUserGameData = (req, res, next) => {
         return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
-  });
 }
 
 const deleteUser = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     const id = req.params.id;
     User.findOneAndUpdate(
       { _id: id, delFlag: "N" },
@@ -216,15 +194,9 @@ const deleteUser = (req, res, next) => {
         return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
-  });
 }
 
 const getUsers = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     User.find({ delFlag: "N" }, (error, users) => {
       if (error) {
         logger.error(`Error occurred fetching users: ${error}`);
@@ -235,7 +207,6 @@ const getUsers = (req, res, next) => {
       }
       return res.status(200).json(sendSuccessMessage(users.map(user => filterUserInfo(user))));
     });
-  });
 }
 
 const verifyEmail = (req, res, next) => {
@@ -270,11 +241,6 @@ const verifyEmail = (req, res, next) => {
 }
 
 const getUsersRanking = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     User.find({ delFlag: "N", }, (error, users) => {
       if (error) {
         logger.error(`Error occurred fetching users: ${error}`);
@@ -287,15 +253,9 @@ const getUsersRanking = (req, res, next) => {
     })
       .sort({ 'gameData.totalCoins': -1 })
       .limit(10);
-  });
 }
 
 const updateUserPaymentStatus = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     const id = req.params.id;
     User.findOneAndUpdate(
       { _id: id, delFlag: "N" },
@@ -322,20 +282,13 @@ const updateUserPaymentStatus = (req, res, next) => {
         return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
       }
     );
-  });
 }
 
 const resendEmailVerificationCode = (req, res, next) => {
-  jwt.verify(req.token, SECRET_KEY, (error, authData) => {
-    if (error) {
-      logger.error(`token verification error: ${error}`);
-      return res.status(401).json(sendErrorMessage("Unauthorized Request", 401));
-    }
     const { email, emailVerificationCode } = req.body;
     sendEmailVerificationMail(email, emailVerificationCode)
       .then(resp => res.status(200).json(sendSuccessMessage(`Email Sent Successfully to ${email}`)))
       .catch(err => res.status(400).json(sendErrorMessage(`Error Occured Sending Email to ${email}. ${err}`)))
-  });
 }
 
 const resetPassword = (req, res, next) => {
@@ -405,16 +358,16 @@ const verifyReferralCode = async (req, res, next) => {
       if (isUserNotFoundError(error)) {
         return res.status(404).json(sendErrorMessage(`Invalid Referral Code ${referralCode} Supplied`, 404));
       }
-      logger.error(`Error occured fetching user with email ${email}: ${error}`);
+      logger.error(`Error occurred fetching user with email ${email}: ${error}`);
       return res.status(400).json(sendErrorMessage(error, 400));
     }
     if (!user) {
       return res.status(400).json(sendErrorMessage(`Invalid Referral Code ${referralCode} Supplied`, 400));
     }
-    const referedUsersEmail = user.referedUsers.map(userDetails => Object.values(userDetails)).join();
+    const referredUsersEmail = user.referredUsers.map(userDetails => Object.values(userDetails)).join();
     let isNewReferral = false;
-    if(!referedUsersEmail.includes(email)){
-      user.referedUsers.push({referredUser: email, dateReferred: new Date()});
+    if(!referredUsersEmail.includes(email)){
+      user.referredUsers.push({referredUser: email, dateReferred: new Date()});
       isNewReferral = true;
     }
 
@@ -424,14 +377,27 @@ const verifyReferralCode = async (req, res, next) => {
         return res.status(400).json(sendErrorMessage(`Error Validating Referral Code ${referralCode} Supplied`, 500));
       }
       if (isNewReferral) {
-        return res.status(200).json(sendSuccessMessage('Referral Code Applied Successfully'));  
+        return res.status(200).json(sendSuccessMessage('Referral Code Applied Successfully'));
       } else {
-        return res.status(400).json(sendErrorMessage('Referral Code Already Applied')); 
+        return res.status(400).json(sendErrorMessage('Referral Code Already Applied'));
       }
     });
   });
 }
 
 module.exports = {
-  signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode, resetPassword, getUserWithEmail, verifyReferralCode
+  signup,
+  login,
+  getUser,
+  updateUser,
+  deleteUser,
+  getUsers,
+  verifyEmail,
+  getUsersRanking,
+  updateUserGameData,
+  updateUserPaymentStatus,
+  resendEmailVerificationCode,
+  resetPassword,
+  getUserWithEmail,
+  verifyReferralCode
 }

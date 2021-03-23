@@ -1,5 +1,7 @@
-const nodemailer = require('nodemailer'); 
-const fetch = require('node-fetch')
+const jwt = require("jsonwebtoken");
+const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
+const { logger } = require("../core/logger.js");
 const {
   EMAIL_SERVICE,
   SENDER_NAME,
@@ -7,7 +9,8 @@ const {
   SENDER_PASSWORD,
   SUBJECT,
   MAIL_CHIMP_URL,
-  MAIL_CHIMP_API_KEY
+  MAIL_CHIMP_API_KEY,
+  SECRET_KEY
 } = require("./config.js");
 
 const transporter = nodemailer.createTransport({
@@ -76,13 +79,23 @@ exports.filterQuestionInfo = (question) => {
   });
 }
 
-exports.verifyToken = (req, res, next) => {
+exports.checkHeaderToken = (req, res, next) => {
   const bearerHeader = req.headers["authorization"];
   if (!bearerHeader) {
     return res.status(401).json(this.sendErrorMessage('Missing Header Token', 401));
   }
   req.token = bearerHeader.split(" ")[1];
   next();
+}
+
+exports.verifyToken = (req, res, next) => {
+    jwt.verify(req.token, SECRET_KEY, (error, authData) => {
+        if (error) {
+            logger.error(`token verification error: ${error}`);
+            return res.status(401).json(this.sendErrorMessage("Unauthorized Request", 401));
+        }
+    });
+    next();
 }
 
 exports.generateEmailVerificationCode = () => {
@@ -125,9 +138,9 @@ exports.sendEmailAndUsernameToMailChimp = (email, username, phone) => {
       ]
     })
   }).then((response) => {
-    console.log("subscription successful");
+    logger.info("subscription successful");
   }, (error) => {
-    console.error(`error occeured subscribing email ${email}: ${error}`);
+    logger.error(`error occeured subscribing email ${email}: ${error}`);
   });
 }
 

@@ -3,43 +3,43 @@ const express = require("express");
 const path = require("path");
 const morgan = require("morgan");
 const { logger } = require("./core/logger.js");
+const { PORT } = require("./core/config.js");
+const userRoute = require("./routes/userRoute");
+const questionRoute = require("./routes/questionRoute");
+const settingRoute = require("./routes/settingRoute");
+const earningRoute = require("./routes/earningRoute");
+const adminRoute = require('./routes/adminRoute');
 
 //App init
 const app = express();
 require("./core/database");
-const { PORT } = require("./core/config.js");
 
 //Middlewares
 app.use(express.json());
-app.options("*",(req, res, next) => {
-    var headers = {};
-    headers["Access-Control-Allow-Origin"] = "*";
-    headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS";
-    headers["Access-Control-Allow-Credentials"] = false;
-    headers["Access-Control-Allow-Headers"] = "Authorization, X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
-    res.writeHead(200, headers);
-    res.send();
+app.options("*", (req, res, next) => {
+  let headers = {};
+  headers["Access-Control-Allow-Origin"] = "*";
+  headers["Access-Control-Allow-Methods"] = "POST, GET, PUT, DELETE, OPTIONS";
+  headers["Access-Control-Allow-Credentials"] = false;
+  headers["Access-Control-Allow-Headers"] = "Authorization, X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+  res.writeHead(200, headers);
+  res.send();
 });
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '/public')));
 app.use(morgan("dev"));
 app.use((req, res, next) => {
   res.on('finish', function () {
     logger.info(`${req.method} request received on ${Date()} ${req.url} ${this.statusCode}`);
-  })
+  });
   next();
 });
-const { verifyToken } = require("./core/utils");
-
-//Routes
-const { signup, login, getUser, updateUser, deleteUser, getUsers, verifyEmail, getUsersRanking, updateUserGameData, updateUserPaymentStatus, resendEmailVerificationCode, resetPassword, getUserWithEmail, verifyReferralCode } = require("./routes/user");
-const { getQuestionsForLevel, getQuestionsForArena, deleteQuestion, createQuestion, updateQuestion, deleteQuestionsInArena } = require("./routes/question");
-const { createSetting, updateSetting } = require("./routes/setting");
-const { createEarning, updateEarning } = require("./routes/earning");
-
-const USER_URI = "/api/user"
-const QUESTION_URI = "/api/question"
-const SETTING_URI = "/api/setting"
-const EARNING_URI = "/api/earning"
+app.use(adminRoute);
+//Routes Middleware
+app.use(userRoute);
+app.use(questionRoute);
+app.use(earningRoute);
+app.use(settingRoute);
+// app.use(`${ADMIN_URI}`, adminRoute);
 
 app.all('/*', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -48,44 +48,9 @@ app.all('/*', function (req, res, next) {
   next();
 });
 
-//Unprotected User Resource
-app.post(`${USER_URI}/signup`, signup);
-app.post(`${USER_URI}/login`, login);
-app.put(`${USER_URI}/email/:id`, verifyEmail);
-app.put(`${USER_URI}/resetPassword`, resetPassword);
-app.get(`${USER_URI}/:email`, getUserWithEmail);
-app.get(`${USER_URI}/verifyReferralCode/:referralCode/:email`, verifyReferralCode);
-
-
-//Token Middleware
-app.use(verifyToken);
-
-//Protected User Resource
-app.put(`${USER_URI}/resendcode`, resendEmailVerificationCode);
-app.put(`${USER_URI}/:id`, updateUser);
-app.put(`${USER_URI}/gamedata/:id`, updateUserGameData);
-app.put(`${USER_URI}/payment/:id`, updateUserPaymentStatus);
-app.delete(`${USER_URI}/:id`, deleteUser);
-app.get(USER_URI, getUsers);
-app.get(`${USER_URI}/ranking`, getUsersRanking);
-app.get(`${USER_URI}/:id`, getUser);
-
-//Protected Question Resource
-app.get(`${QUESTION_URI}/:arena`, getQuestionsForArena);
-app.post(QUESTION_URI, createQuestion);
-app.get(`${QUESTION_URI}/:arena/:level`, getQuestionsForLevel);
-app.delete(`${QUESTION_URI}/:arena`, deleteQuestionsInArena);
-app.delete(`${QUESTION_URI}/:id`, deleteQuestion);
-app.put(`${QUESTION_URI}/:id`, updateQuestion);
-
-
-//Protected Setting Resource
-app.post(SETTING_URI, createSetting);
-app.put(SETTING_URI, updateSetting);
-
-//Protected Earning Resource
-app.get(`${EARNING_URI}/:userId`, createEarning);
-app.put(`${EARNING_URI}/:id`, updateEarning);
+// app.get(ADMIN_URI, (req, res) => {
+//   res.sendFile("admin.html", {root : path.join(__dirname, '/public')});
+// });
 
 //Server Startup
 app.listen(PORT, logger.info(`IRE Game Server Started On Port ${PORT}...`));

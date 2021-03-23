@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>IRE-Game API - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link href="https://bootswatch.com/4/slate/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"
+        ></script>
+</head>
+
+<body class="container-fluid">
+    <div class="container">
+        <section class="row mt-5 text-center">
+            <div class="col-md-6 m-auto">
+                <h1 class="fas fa-user-circle fa-5x">
+                    <h1 class="display-4">IRE-Game API - Admin</h1>
+            </div>
+        </section>
+
+        <div id="errorDiv" class="alert text-center"></div>
+
+        <section class="row mt-2 text-center">
+            <div class="col-md-6 m-auto">
+                <form id="referralsForm">
+                    <div class="form-group">
+                        <label></label>
+                        <input name="adminId" class="form-control mr-sm-2" type="text" required placeholder="Enter Admin ID">
+                    </div>
+                    <div class="form-group">
+                        <input type="date" name="fromDate" class="form-control" required placeholder="Enter Start Date">
+                    </div>
+                    <div class="form-group">
+                        <input type="date" name="toDate" class="form-control" required placeholder="Enter End Date">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" name="threshold" class="form-control" required placeholder="Enter Threshold">
+                    </div>
+                    <button type="submit" name="btnSubmit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- <script href='./index.js'></script> -->
+        <script>
+            $("#referralsForm").submit(event => {
+                event.preventDefault();
+                let myform = document.getElementById("referralsForm");
+                let formData = $('#referralsForm').serialize();
+                console.log(formData);
+                $.ajax({
+                    type: "GET",
+                    url: `/api/admin/referrals?${formData}`,
+                    dataType: 'json',
+                    processData: false,
+                    contentType: false,
+                    success: (result) => {
+                        console.log(result);
+                        $("#errorDiv").html("<strong>" + result + "</strong>");
+                    },
+                    error: (error) => {
+                        console.log(error);
+                        $("#errorDiv")
+                            .html(`
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <strong>${error.responseJSON.message}. ${error.statusText}. (${error.status})</strong>
+              </div>`
+                            );
+                    }
+                });
+            });
+        </script>
+    </div>
+</body>

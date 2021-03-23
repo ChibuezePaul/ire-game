@@ -3,6 +3,7 @@ const { DB_URL } = require("./config.js");
 const { SETTINGS_COUNT } = require("./config.js");
 const { logger } = require("./logger.js");
 const Setting = require("../models/Setting");
+let INIT_SETTINGS_DATA = process.env.INIT_SETTINGS_DATA || require(`../settingsInitData`);
 
 mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, audoIndex: true })
   .then(() => logger.info("Database connected successfully"))
@@ -14,24 +15,11 @@ mongoose.connection.on('connected', (con => {
       logger.error(`Error occurred getting count of records in settings db: ${error}`);
     }
     if(count < SETTINGS_COUNT){
-      Setting.insertMany([
-        {
-          "name" : "referralThreshold",
-          "value" : "3",
-        },
-        {
-          "name" : "referralFee",
-          "value" : "0.1",
-        },
-        {
-          "name" : "registrationFee",
-          "value" : "1000"
-        },
-        {
-          "name" : "isReferralActive",
-          "value" : true
+        if (typeof INIT_SETTINGS_DATA === "string") {
+            INIT_SETTINGS_DATA = JSON.parse(INIT_SETTINGS_DATA);
+            logger.info("INIT_SETTINGS_DATA parsed successfully")
         }
-      ], (error, settings) => {
+      Setting.insertMany(INIT_SETTINGS_DATA, (error, settings) => {
         if(error) {
           logger.error(`Error occurred inserting records in settings db: ${error}`);
         }else{

@@ -9,6 +9,11 @@ const settingSchema = mongoose.Schema({
     type: String,
     required: [true, 'Value is required!']
   },
+  delFlag: {
+    type: String,
+    default: "N",
+    index: true
+  },
   createdOn: {
     type: Date,
     default: Date.now

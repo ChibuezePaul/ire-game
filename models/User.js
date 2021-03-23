@@ -116,7 +116,7 @@ const userSchema = mongoose.Schema({
     }
   },
   emailVerificationCode: Number,
-  referedUsers: Array,
+  referredUsers: Array,
   earnings: Array
 },
 {
