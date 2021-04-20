@@ -226,7 +226,7 @@ const verifyEmail = (req, res, next) => {
         if (isUserNotFoundError(error)) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        logger.error(`Error occured veryfying email for user with id ${id}: ${error}`);
+        logger.error(`Error occurred verifying email for user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
@@ -348,7 +348,7 @@ const getUserWithEmail = (req, res, next) => {
   });
 }
 
-const verifyReferralCode = async (req, res, next) => {
+const verifyReferralCode = (req, res, next) => {
 
   const referralCode = req.params.referralCode;
   const email = req.params.email;
@@ -384,6 +384,35 @@ const verifyReferralCode = async (req, res, next) => {
   });
 }
 
+const uploadProfileImage = (req, res) => {
+  const { id, imageUrl } = req.body;
+  User.findOneAndUpdate(
+      { _id: id, delFlag: "N" },
+      {
+          $set: {
+              profileImageUrl: imageUrl,
+          },
+      },
+      {
+          new: true,
+          useFindAndModify: false
+      },
+      (error, user) => {
+          if (error) {
+              if (isUserNotFoundError(error)) {
+                  return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+              }
+              logger.error(`Error occurred uploading profile image for user with id ${id}: ${error}`);
+              return res.status(400).json(sendErrorMessage(error, 400));
+          }
+          if (!user) {
+              return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
+          }
+          return res.status(200).json(sendSuccessMessage(filterUserInfo(user)));
+      }
+  );
+}
+
 module.exports = {
   signup,
   login,
@@ -398,5 +427,6 @@ module.exports = {
   resendEmailVerificationCode,
   resetPassword,
   getUserWithEmail,
-  verifyReferralCode
+  verifyReferralCode,
+  uploadProfileImage
 }

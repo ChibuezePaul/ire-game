@@ -33,9 +33,7 @@ exports.sendSuccessMessage = (message, code = 200) => {
   };
 }
 
-exports.isUserNotFoundError = (error) => {
-  return error.toString().indexOf("CastError") != -1
-}
+exports.isUserNotFoundError = (error) => error.toString().indexOf("CastError") !== -1;
 
 exports.filterUserInfo = (user) => {
   return user.toObject({
@@ -138,11 +136,11 @@ exports.sendEmailAndUsernameToMailChimp = (email, username, phone) => {
       ]
     })
   }).then((response) => {
-    logger.info("subscription successful");
+    logger.info(`subscription successful: ${response}`);
   }, (error) => {
-    logger.error(`error occeured subscribing email ${email}: ${error}`);
+    logger.error(`error occurred subscribing email ${email}: ${error}`);
   });
-}
+};
 
 exports.isDateWithinCurrentMonth = (date) => {
   const my_date = new Date();
