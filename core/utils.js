@@ -150,3 +150,11 @@ exports.isDateWithinCurrentMonth = (date) => {
   const last_date = new Date(my_date.getFullYear(), my_date.getMonth() + 1, 1);
   return date.getTime() >= first_date.getTime() && date.getTime() <= last_date.getTime();
 };
+
+exports.isDateWithinStartAndEndDate = (fromDate, toDate, date) => {
+  const startDate = new Date(fromDate);
+  const endDate = new Date(toDate);
+  const first_date = new Date(startDate.getFullYear(), startDate.getMonth(), 2);
+  const last_date = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
+  return date.getTime() >= first_date.getTime() && date.getTime() <= last_date.getTime();
+};

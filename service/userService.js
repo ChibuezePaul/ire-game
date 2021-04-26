@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { SECRET_KEY } = require("../core/config.js");
 const { logger } = require("../core/logger.js");
-const { verifyToken } = require("../core/utils");
 const { sendErrorMessage, sendSuccessMessage, filterUserInfo, filterUserInfoForRanking, generateEmailVerificationCode, sendEmailVerificationMail, isUserNotFoundError, sendEmailAndUsernameToMailChimp } = require("../core/utils");
 
 const signup = (req, res) => {

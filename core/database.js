@@ -5,7 +5,7 @@ const { logger } = require("./logger.js");
 const Setting = require("../models/Setting");
 let INIT_SETTINGS_DATA = process.env.INIT_SETTINGS_DATA || require(`../settingsInitData`);
 
-mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, audoIndex: true })
+mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, autoIndex: true })
   .then(() => logger.info("Database connected successfully"))
   .catch(() => logger.error("Database connection error"));
   

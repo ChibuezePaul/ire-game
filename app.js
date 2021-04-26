@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const morgan = require("morgan");
+const hbs = require('express-handlebars');
 const { logger } = require("./core/logger.js");
 const { PORT } = require("./core/config.js");
 const userRoute = require("./routes/userRoute");
@@ -16,6 +17,7 @@ require("./core/database");
 
 //Middlewares
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.options("*", (req, res, next) => {
   let headers = {};
   headers["Access-Control-Allow-Origin"] = "*";
@@ -25,6 +27,15 @@ app.options("*", (req, res, next) => {
   res.writeHead(200, headers);
   res.send();
 });
+// view engine setup
+app.set('view engine', 'hbs');
+app.engine( 'hbs', hbs( {
+    extname: 'hbs',
+    defaultView: 'index',
+    layoutsDir: __dirname + '/views/layout/',
+    partialsDir: __dirname + '/views/partials/'
+}));
+
 app.use(express.static(path.join(__dirname, '/public')));
 app.use(morgan("dev"));
 app.use((req, res, next) => {
@@ -33,12 +44,12 @@ app.use((req, res, next) => {
   });
   next();
 });
-app.use(adminRoute);
 //Routes Middleware
 app.use(userRoute);
 app.use(questionRoute);
 app.use(earningRoute);
 app.use(settingRoute);
+app.use(adminRoute);
 // app.use(`${ADMIN_URI}`, adminRoute);
 
 app.all('/*', function (req, res, next) {
@@ -49,7 +60,7 @@ app.all('/*', function (req, res, next) {
 });
 
 // app.get(ADMIN_URI, (req, res) => {
-//   res.sendFile("admin.html", {root : path.join(__dirname, '/public')});
+//   res.sendFile("admin.hbs", {root : path.join(__dirname, '/public')});
 // });
 
 //Server Startup
