@@ -27,6 +27,7 @@ app.options("*", (req, res, next) => {
   res.writeHead(200, headers);
   res.send();
 });
+
 // view engine setup
 app.set('view engine', 'hbs');
 app.engine( 'hbs', hbs( {
@@ -44,13 +45,13 @@ app.use((req, res, next) => {
   });
   next();
 });
+
 //Routes Middleware
 app.use(userRoute);
 app.use(questionRoute);
 app.use(earningRoute);
 app.use(settingRoute);
 app.use(adminRoute);
-// app.use(`${ADMIN_URI}`, adminRoute);
 
 app.all('/*', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -58,10 +59,6 @@ app.all('/*', function (req, res, next) {
   res.setHeader('Access-Control-Allow-Headers', 'content-Type,x-requested-with');
   next();
 });
-
-// app.get(ADMIN_URI, (req, res) => {
-//   res.sendFile("admin.hbs", {root : path.join(__dirname, '/public')});
-// });
 
 //Server Startup
 app.listen(PORT, logger.info(`IRE Game Server Started On Port ${PORT}...`));
