@@ -76,7 +76,8 @@ const login = (req, res) => {
       if (!isMatch) {
         return res.status(400).json(sendErrorMessage('Incorrect password'));
       }
-      jwt.sign({ user }, SECRET_KEY, (error, token) => {
+      const payload = user.username;
+      jwt.sign({payload}, SECRET_KEY, (error, token) => {
         return res.status(200).json([{ User: filterUserInfo(user) }, sendSuccessMessage("Bearer " + token)]);
       })
     });
@@ -90,7 +91,7 @@ const getUser = (req, res, next) => {
         if (isUserNotFoundError(error)) {
           return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
         }
-        logger.error(`Error occured fetching user with id ${id}: ${error}`);
+        logger.error(`Error occurred fetching user with id ${id}: ${error}`);
         return res.status(400).json(sendErrorMessage(error, 400));
       }
       if (!user) {
@@ -122,7 +123,7 @@ const updateUser = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          logger.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occurred fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -155,7 +156,7 @@ const updateUserGameData = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          logger.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occurred fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -184,7 +185,7 @@ const deleteUser = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          logger.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occurred fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -232,7 +233,8 @@ const verifyEmail = (req, res, next) => {
       if (!user) {
         return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
       }
-      jwt.sign({ user }, SECRET_KEY, (error, token) => {
+      const payload = user.username;
+      jwt.sign({payload} , SECRET_KEY, (error, token) => {
         return res.status(200).json([{ User: filterUserInfo(user) }, sendSuccessMessage("Bearer " + token)]);
       })
     }
@@ -272,7 +274,7 @@ const updateUserPaymentStatus = (req, res, next) => {
           if (isUserNotFoundError(error)) {
             return res.status(404).json(sendErrorMessage(`User not found with id: ${id}`, 404));
           }
-          logger.error(`Error occured fetching user with id ${id}: ${error}`);
+          logger.error(`Error occurred fetching user with id ${id}: ${error}`);
           return res.status(400).json(sendErrorMessage(error, 400));
         }
         if (!user) {
@@ -287,7 +289,7 @@ const resendEmailVerificationCode = (req, res, next) => {
     const { email, emailVerificationCode } = req.body;
     sendEmailVerificationMail(email, emailVerificationCode)
       .then(resp => res.status(200).json(sendSuccessMessage(`Email Sent Successfully to ${email}`)))
-      .catch(err => res.status(400).json(sendErrorMessage(`Error Occured Sending Email to ${email}. ${err}`)))
+      .catch(err => res.status(400).json(sendErrorMessage(`Error Occurred Sending Email to ${email}. ${err}`)))
 }
 
 const resetPassword = (req, res, next) => {
@@ -338,7 +340,7 @@ const getUserWithEmail = (req, res, next) => {
       if (isUserNotFoundError(error)) {
         return res.status(404).json(sendErrorMessage(`User not found with email: ${email}`, 404));
       }
-      logger.error(`Error occured fetching user with email ${email}: ${error}`);
+      logger.error(`Error occurred fetching user with email ${email}: ${error}`);
       return res.status(400).json(sendErrorMessage(error, 400));
     }
     if (!user) {
