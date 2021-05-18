@@ -101,9 +101,11 @@ exports.generateEmailVerificationCode = () => {
 }
 
 exports.sendEmailVerificationMail = async (email, emailVerificationCode) => {
-  const mailOptions = {
-    from: SENDER_NAME + '<' + SENDER_EMAIL + '>',
+    const replyTo = 'noreply@ire.com';
+    const mailOptions = {
+    from: `${SENDER_NAME} ${replyTo}`,
     to: email,
+    replyTo: replyTo,
     subject: SUBJECT,
     html: emailVerificationText(emailVerificationCode)
   };

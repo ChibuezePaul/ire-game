@@ -1,4 +1,3 @@
-const { sendErrorMessage, sendSuccessMessage } = require("../core/utils");
 const adminRoute = require('../core/routeConfig');
 const adminService = require('../service/adminService');
 const ADMIN_URI = '/api/admin';

@@ -26,7 +26,6 @@ const userSchema = mongoose.Schema({
   },
   gender: {
     type: String,
-    required: true,
     uppercase: true,
     enum: ["MALE", "FEMALE"],
     validate: {

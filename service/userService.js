@@ -11,7 +11,7 @@ const signup = (req, res) => {
   }
   const { username, password, email, phone, gender, location, avatarId } = req.body;
 
-  if (!username || !password || !email || !gender || !location) {
+  if (!username || !password || !email || !location) {
     return res.status(400).json(sendErrorMessage("Missing body parameters"));
   }
 

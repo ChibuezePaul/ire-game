@@ -12,7 +12,7 @@ userRoute.get(`${USER_URI}/email/:email`, userService.getUserWithEmail);
 userRoute.get(`${USER_URI}/verifyReferralCode/:referralCode/:email`, userService.verifyReferralCode);
 
 //Protected User Resource
-userRoute.put(`${USER_URI}/profile-image`, /*checkHeaderToken, verifyToken,*/ userService.uploadProfileImage);
+userRoute.put(`${USER_URI}/profile-image`, checkHeaderToken, verifyToken, userService.uploadProfileImage);
 userRoute.put(`${USER_URI}/resendcode`, checkHeaderToken, verifyToken, userService.resendEmailVerificationCode);
 userRoute.put(`${USER_URI}/:id`, checkHeaderToken, verifyToken, userService.updateUser);
 userRoute.put(`${USER_URI}/gamedata/:id`, checkHeaderToken, verifyToken, userService.updateUserGameData);
